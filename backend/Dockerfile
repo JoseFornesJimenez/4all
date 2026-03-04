@@ -1,7 +1,10 @@
 # ─── Dockerfile - Backend 4all ───────────────────────────────────────────────
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
+
+# Instalar OpenSSL (requerido por Prisma)
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias primero (capa cacheada)
 COPY package*.json ./
