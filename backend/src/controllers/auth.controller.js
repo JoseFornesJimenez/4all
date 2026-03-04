@@ -4,10 +4,18 @@ const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
+
+// bcrypt cost factor: 2^10 = 1024 hashing rounds.
+// Higher values are slower to brute-force but increase CPU cost on login/register.
+// 10 is the industry-standard default that balances security and performance.
 const SALT_ROUNDS = 10;
 
 /**
  * Genera un JWT para el usuario dado.
+ *
+ * Payload: { userId } — only the user's UUID is embedded to keep the token small.
+ * Expiry : controlled by JWT_EXPIRES_IN env var (defaults to 7 days).
+ *          After expiry the middleware rejects the token with 401 TokenExpiredError.
  */
 const generarToken = (userId) => {
   return jwt.sign(
@@ -64,6 +72,9 @@ const login = async (req, res, next) => {
 
     // Buscar usuario (incluimos password para comparar)
     const user = await prisma.user.findUnique({ where: { email } });
+    // Security: return the same generic error message whether the email does not
+    // exist or the password is wrong. This prevents user-enumeration attacks where
+    // an attacker could probe which emails are registered in the system.
     if (!user) {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
     }

@@ -106,26 +106,54 @@ curl http://192.168.1.47:3008/api/health
 
 ---
 
-## Poner en marcha la app móvil
+## Instalar la app en el móvil (para compañeros de piso)
 
-### 1. Instala dependencias
+> Solo necesitas el móvil. No hace falta instalar nada en el ordenador.
+
+1. Abre la **Play Store** (Android) o la **App Store** (iOS)
+2. Busca **"Expo Go"** e instálala
+3. Abre Expo Go y escanea el QR que te pase el administrador del piso
+
+Listo. No necesitas cuenta de Expo ni configurar nada más.
+
+> **Requisito:** el móvil debe estar conectado a la **misma red WiFi** que el servidor.
+
+---
+
+## Poner en marcha la app móvil (para desarrolladores)
+
+### 1. Requisitos previos
+
+- [Node.js 20+](https://nodejs.org/) instalado en el ordenador
+- [Git](https://git-scm.com/) para clonar el repositorio
+- **Expo Go** instalado en el móvil (SDK 54)
+  - Android: [Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
+  - iOS: [App Store](https://apps.apple.com/app/expo-go/id982107779)
+
+### 2. Clona el repositorio
 
 ```bash
-cd mobile2
+git clone <url-del-repositorio>
+cd 4all/mobile2
+```
+
+### 3. Instala dependencias
+
+```bash
 npm install --legacy-peer-deps
 ```
 
-### 2. Configura la URL del backend
+### 4. Configura la URL del backend
 
-Edita `mobile2/.env`:
+Crea el archivo `mobile2/.env` (o edítalo si ya existe):
 
 ```env
 EXPO_PUBLIC_API_URL=http://192.168.1.47:3008/api
 ```
 
-> Pon la IP de tu servidor. El móvil y el servidor deben estar en la misma red.
+> Pon la IP del servidor donde corre el backend. El móvil y el servidor deben estar en la **misma red WiFi**.
 
-### 3. Arranca Expo
+### 5. Arranca Expo
 
 ```bash
 npx expo start

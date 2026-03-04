@@ -1,3 +1,12 @@
+/**
+ * @file compra.controller.js
+ * @description Controller for the shared shopping list feature.
+ *
+ * Each item belongs to a piso and tracks who created it, its name/quantity,
+ * and whether it has been picked up (completado). All operations are scoped
+ * to the authenticated user's pisoId so members of one flat can never
+ * read or mutate items belonging to another flat.
+ */
 // ─── Controlador de Lista de la Compra ───────────────────────────────────────
 const { PrismaClient } = require('@prisma/client');
 
@@ -6,6 +15,8 @@ const prisma = new PrismaClient();
 // ─── GET /api/compra ──────────────────────────────────────────────────────────
 const listarItems = async (req, res, next) => {
   try {
+    // Sort order: pending items first (completado asc: false < true),
+    // then within each group show the most recently added item at the top (createdAt desc).
     const items = await prisma.itemCompra.findMany({
       where: { pisoId: req.user.pisoId },
       include: { creadoPor: { select: { id: true, nombre: true } } },
@@ -47,6 +58,9 @@ const toggleItem = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // Security: findFirst scopes the lookup to the user's own pisoId.
+    // This prevents a user from toggling an item that belongs to a different
+    // piso by guessing or brute-forcing another item's UUID.
     const item = await prisma.itemCompra.findFirst({
       where: { id, pisoId: req.user.pisoId },
     });

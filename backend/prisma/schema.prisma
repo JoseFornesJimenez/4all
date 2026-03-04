@@ -41,7 +41,7 @@ model Piso {
   id          String   @id @default(uuid())
   nombre      String
   direccion   String?
-  codigo      String   @unique // Código único para unirse al piso
+  codigo      String   @unique // Invite code shown to users (6 uppercase hex chars). Share this to let others join the piso.
   adminId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -128,7 +128,11 @@ model Gasto {
   @@map("gastos")
 }
 
-// Deuda individual por gasto (quién debe cuánto a quién)
+// Deuda individual por gasto (quién debe cuánto a quién).
+// Each Gasto generates exactly N-1 Deuda rows, where N is the number of piso
+// members at the time of creation. The payer (acreedor) gets one Deuda record
+// per other member (deudor) for their proportional share of the expense.
+// Example: 4 members, €40 gasto → 3 Deuda rows of €10 each.
 model Deuda {
   id        String   @id @default(uuid())
   monto     Decimal  @db.Decimal(10, 2)

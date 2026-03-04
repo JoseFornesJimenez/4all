@@ -7,6 +7,8 @@ const {
 } = require('../controllers/incidencia.controller');
 const { authMiddleware, requirePiso } = require('../middleware/auth.middleware');
 
+// All incidencia routes require both a valid JWT (authMiddleware) and
+// membership in a piso (requirePiso). Applied globally via router.use.
 router.use(authMiddleware, requirePiso);
 
 router.get('/',        listarIncidencias);
