@@ -1,0 +1,147 @@
+// Prisma Schema - 4all App
+// Gestión de compañeros de piso
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USUARIO ─────────────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(uuid())
+  nombre    String
+  email     String   @unique
+  password  String
+  avatar    String?
+  pushToken String?  // Token para notificaciones push (Expo)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  pisoId    String?
+  piso      Piso?    @relation("MiembrosPiso", fields: [pisoId], references: [id])
+  pisosCreados Piso[] @relation("AdminPiso")
+
+  comprasCreadas    ItemCompra[]   @relation("CreadoPor")
+  incidenciasCreadas Incidencia[] @relation("CreadaBy")
+  incidenciasAsignadas Incidencia[] @relation("AsignadaA")
+  gastosCreados     Gasto[]        @relation("PagadoPor")
+  deudas            Deuda[]        @relation("Deudor")
+  acreedores        Deuda[]        @relation("Acreedor")
+
+  @@map("users")
+}
+
+// ─── PISO ─────────────────────────────────────────────────────────────────────
+model Piso {
+  id          String   @id @default(uuid())
+  nombre      String
+  direccion   String?
+  codigo      String   @unique // Código único para unirse al piso
+  adminId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  admin       User     @relation("AdminPiso", fields: [adminId], references: [id])
+  miembros    User[]   @relation("MiembrosPiso")
+  listaCompra ItemCompra[]
+  incidencias Incidencia[]
+  gastos      Gasto[]
+
+  @@map("pisos")
+}
+
+// ─── LISTA DE LA COMPRA ───────────────────────────────────────────────────────
+model ItemCompra {
+  id        String   @id @default(uuid())
+  nombre    String
+  cantidad  String?  // "2 litros", "1 kg", etc.
+  completado Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  pisoId    String
+  piso      Piso     @relation(fields: [pisoId], references: [id], onDelete: Cascade)
+  creadoPorId String
+  creadoPor   User   @relation("CreadoPor", fields: [creadoPorId], references: [id])
+
+  @@map("items_compra")
+}
+
+// ─── INCIDENCIAS ──────────────────────────────────────────────────────────────
+enum EstadoIncidencia {
+  ABIERTA
+  EN_PROGRESO
+  RESUELTA
+}
+
+enum PrioridadIncidencia {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+model Incidencia {
+  id          String              @id @default(uuid())
+  titulo      String
+  descripcion String?
+  estado      EstadoIncidencia    @default(ABIERTA)
+  prioridad   PrioridadIncidencia @default(MEDIA)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  resueltaAt  DateTime?
+
+  // Relaciones
+  pisoId      String
+  piso        Piso   @relation(fields: [pisoId], references: [id], onDelete: Cascade)
+  creadaPorId String
+  creadaPor   User   @relation("CreadaBy", fields: [creadaPorId], references: [id])
+  asignadaAId String?
+  asignadaA   User?  @relation("AsignadaA", fields: [asignadaAId], references: [id])
+
+  @@map("incidencias")
+}
+
+// ─── GASTOS COMPARTIDOS ───────────────────────────────────────────────────────
+model Gasto {
+  id          String   @id @default(uuid())
+  descripcion String
+  monto       Decimal  @db.Decimal(10, 2)
+  fecha       DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  pisoId      String
+  piso        Piso     @relation(fields: [pisoId], references: [id], onDelete: Cascade)
+  pagadoPorId String
+  pagadoPor   User     @relation("PagadoPor", fields: [pagadoPorId], references: [id])
+  deudas      Deuda[]  // Cuánto debe cada miembro por este gasto
+
+  @@map("gastos")
+}
+
+// Deuda individual por gasto (quién debe cuánto a quién)
+model Deuda {
+  id        String   @id @default(uuid())
+  monto     Decimal  @db.Decimal(10, 2)
+  pagada    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relaciones
+  gastoId   String
+  gasto     Gasto  @relation(fields: [gastoId], references: [id], onDelete: Cascade)
+  deudorId  String
+  deudor    User   @relation("Deudor", fields: [deudorId], references: [id])
+  acreedorId String
+  acreedor   User  @relation("Acreedor", fields: [acreedorId], references: [id])
+
+  @@map("deudas")
+}
