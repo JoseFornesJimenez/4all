@@ -1,25 +1,62 @@
 services:
 
-  # ─── PostgreSQL ──────────────────────────────────────────────────────────────
+  # ─── PostgreSQL (imagen de Supabase) ─────────────────────────────────────────
   db:
-    image: postgres:16-alpine
+    image: supabase/postgres:15.6.1.117
     container_name: 4all-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-4all_db}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"          # Expuesto para poder usar Prisma Studio localmente
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # ─── Backend Express ─────────────────────────────────────────────────────────
+  # ─── pg-meta (necesario para que Studio pueda leer el esquema) ───────────────
+  pg-meta:
+    image: supabase/postgres-meta:v0.83.2
+    container_name: 4all-pg-meta
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+
+  # ─── Supabase Studio (dashboard visual) ──────────────────────────────────────
+  # Accede en: http://192.168.1.47:3002
+  studio:
+    image: supabase/studio:20240422-5cf8f30
+    container_name: 4all-studio
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      STUDIO_PG_META_URL: http://pg-meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DEFAULT_ORGANIZATION_NAME: 4all
+      DEFAULT_PROJECT_NAME: 4all
+      # Sin Kong, Studio conecta directamente a pg-meta
+      SUPABASE_URL: http://localhost:8000
+      SUPABASE_PUBLIC_URL: http://localhost:8000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiJ9.ZopqoUt20nEV8rw6HtnRmaiXw4d3QFEEeUtn5AJc29E
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.M2mEFRuqnLyBHhDKFPgOHbDe-PNLR-mCxJH0V0tY5fM
+    ports:
+      - "3002:3000"
+
+  # ─── Backend Express (4all API) ───────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -28,9 +65,9 @@ services:
     restart: unless-stopped
     depends_on:
       db:
-        condition: service_healthy   # Espera a que Postgres esté listo
+        condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-4all_db}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
       JWT_SECRET: ${JWT_SECRET:-cambia_esto_en_produccion}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       PORT: 3008
@@ -39,25 +76,7 @@ services:
     ports:
       - "3008:3008"
     volumes:
-      - ./backend/src:/app/src         # Hot-reload en desarrollo (opcional)
-
-  # ─── Prisma Studio (interfaz visual de la BD) ─────────────────────────────
-  prisma-studio:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: 4all-prisma-studio
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-4all_db}
-    ports:
-      - "5555:5555"
-    command: ["npx", "prisma", "studio", "--port", "5555", "--hostname", "0.0.0.0"]
-    profiles:
-      - tools                          # Solo arranca si haces: docker compose --profile tools up
+      - ./backend/src:/app/src
 
 volumes:
-  postgres_data:
+  db_data:
