@@ -1,9 +1,9 @@
 # ─── CI/CD: Build & Deploy 4all Backend ──────────────────────────────────────
 # Disparo: push a main con cambios en backend/**
 # Pasos:
-#   1. Build imagen Docker desde ./backend
+#   1. Build imagen Docker desde ./backend  (runner de GitHub, en la nube)
 #   2. Push a ghcr.io/josefornesjimenez/4all-backend:latest
-#   3. SSH al servidor k8s (192.168.1.46) y hace rollout restart
+#   3. El self-hosted runner en .46 ejecuta kubectl rollout restart
 name: Deploy Backend
 
 on:
@@ -25,9 +25,6 @@ jobs:
       contents: read
       packages: write
 
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,7 +36,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata (tags & labels)
+      - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -64,17 +61,12 @@ jobs:
 
   deploy:
     name: Deploy to k3s
-    runs-on: ubuntu-latest
+    # Self-hosted runner en 192.168.1.46 — tiene kubectl configurado y acceso al cluster
+    runs-on: self-hosted
     needs: build-and-push
-    environment: production
 
     steps:
-      - name: SSH deploy — rollout restart
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            kubectl rollout restart deployment/4all-backend -n 4all
-            kubectl rollout status deployment/4all-backend -n 4all --timeout=120s
+      - name: Rollout restart
+        run: |
+          kubectl rollout restart deployment/4all-backend -n 4all
+          kubectl rollout status deployment/4all-backend -n 4all --timeout=120s
