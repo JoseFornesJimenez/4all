@@ -4,7 +4,14 @@ const { randomBytes } = require('crypto');
 
 const prisma = new PrismaClient();
 
-/** Genera un código único de 6 caracteres alfanumérico en mayúsculas */
+/**
+ * Genera un código único de 6 caracteres alfanumérico en mayúsculas.
+ *
+ * Approach: randomBytes(3) produces 3 cryptographically random bytes.
+ * Converting those 3 bytes to hexadecimal yields exactly 6 hex characters
+ * (each byte becomes 2 hex digits: 0-9, A-F), giving 16^6 = ~16.7 million
+ * possible codes. toUpperCase() normalises for case-insensitive user entry.
+ */
 const generarCodigo = () => randomBytes(3).toString('hex').toUpperCase();
 
 // ─── POST /api/piso/crear ─────────────────────────────────────────────────────

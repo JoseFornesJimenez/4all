@@ -1,3 +1,20 @@
+/**
+ * @file gasto.controller.js
+ * @description Controller for the shared expense splitting feature.
+ *
+ * Splitting logic:
+ *   When a new expense is created the total amount is divided equally among
+ *   ALL members of the piso (including the payer). For each member who did
+ *   NOT pay, a Deuda record is created linking that member (deudor) to the
+ *   payer (acreedor) for their share (monto / N members).
+ *
+ *   A gasto with N members therefore generates N-1 Deuda rows.
+ *
+ * Balance calculation:
+ *   Each unpaid Deuda decrements the deudor's net balance and increments
+ *   the acreedor's net balance. A positive neto means the user is owed
+ *   money by others; a negative neto means the user owes money to others.
+ */
 // ─── Controlador de Gastos Compartidos ───────────────────────────────────────
 const { PrismaClient } = require('@prisma/client');
 
@@ -35,7 +52,10 @@ const obtenerBalance = async (req, res, next) => {
       select: { id: true, nombre: true, avatar: true },
     });
 
-    // Balance neto de cada usuario (positivo = le deben, negativo = debe)
+    // Net balance per user:
+    //   neto > 0 : this user is owed money (they paid for others)
+    //   neto < 0 : this user owes money (others paid for them)
+    //   neto = 0 : perfectly settled
     const balance = {};
     miembros.forEach((m) => { balance[m.id] = { ...m, neto: 0 }; });
 
@@ -84,7 +104,10 @@ const crearGasto = async (req, res, next) => {
     const montoTotal = parseFloat(monto);
     const montoPorPersona = +(montoTotal / miembros.length).toFixed(2);
 
-    // Crear el gasto y las deudas individuales en una transacción
+    // Prisma $transaction ensures atomicity: either the Gasto and all its
+    // Deuda rows are committed together, or none of them are. This prevents
+    // a partial state where a gasto exists without the corresponding debts
+    // (e.g., if the server crashes mid-operation or a DB constraint fires).
     const gasto = await prisma.$transaction(async (tx) => {
       const nuevoGasto = await tx.gasto.create({
         data: {

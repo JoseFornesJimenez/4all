@@ -1,8 +1,28 @@
+/**
+ * @file incidencia.controller.js
+ * @description Controller for the incident/issue tracking feature.
+ *
+ * Estado enum (EstadoIncidencia):
+ *   - ABIERTA     : Newly reported, not yet being worked on.
+ *   - EN_PROGRESO : Actively being handled by an assignee.
+ *   - RESUELTA    : Resolved; resueltaAt timestamp is recorded automatically.
+ *
+ * Prioridad enum (PrioridadIncidencia):
+ *   - BAJA    : Low urgency, can be addressed when convenient.
+ *   - MEDIA   : Default priority for new incidents.
+ *   - ALTA    : Should be addressed soon.
+ *   - URGENTE : Requires immediate attention.
+ *
+ * All operations are scoped to the authenticated user's pisoId.
+ */
 // ─── Controlador de Incidencias ───────────────────────────────────────────────
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
+// Reusable Prisma include object for fetching incident detail relations.
+// Defined once at module level to avoid duplicating the same structure across
+// listarIncidencias, obtenerIncidencia, crearIncidencia, and actualizarIncidencia.
 const INCLUDE_DETALLE = {
   creadaPor: { select: { id: true, nombre: true, avatar: true } },
   asignadaA: { select: { id: true, nombre: true, avatar: true } },

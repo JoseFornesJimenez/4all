@@ -1,3 +1,27 @@
+/**
+ * @file index.js
+ * @description Entry point for the 4all Express server.
+ *
+ * Middleware stack (applied in order):
+ *   - helmet    : Sets secure HTTP response headers (XSS, clickjacking, etc.)
+ *   - cors      : Allows cross-origin requests from the configured origin
+ *   - express.json : Parses incoming JSON request bodies
+ *   - morgan    : Logs every HTTP request to stdout in 'dev' format
+ *
+ * Registered route prefixes:
+ *   - /api/auth        : Authentication (register, login, profile)
+ *   - /api/piso        : Flat/apartment management
+ *   - /api/compra      : Shopping list
+ *   - /api/incidencias : Issue/incident tracking
+ *   - /api/gastos      : Shared expenses
+ *
+ * Special endpoints:
+ *   - GET /health : Health check — returns status and current timestamp
+ *
+ * Error handling:
+ *   - 4-argument middleware catches any error forwarded via next(err)
+ *   - 404 fallback catches all unmatched routes
+ */
 // ─── Servidor Express - 4all App ──────────────────────────────────────────────
 const express = require('express');
 const cors = require('cors');
@@ -42,6 +66,8 @@ app.use((err, req, res, next) => {
   const status = err.statusCode || 500;
   res.status(status).json({
     error: err.message || 'Error interno del servidor',
+    // Only include the full stack trace in development so it is never
+    // leaked to end-users in production environments.
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
