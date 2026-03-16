@@ -16,3 +16,4 @@ router.get('/me', authMiddleware, me);
 router.patch('/push-token', authMiddleware, actualizarPushToken);
 
 module.exports = router;
+// una prueba por aqui
