@@ -1,0 +1,84 @@
+# ─── Deployment: 4all-backend ─────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 4all-backend
+  namespace: 4all
+  labels:
+    app: 4all-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: 4all-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: 4all-backend
+    spec:
+      # ── Credenciales para bajar imagen de ghcr.io (si el repo es privado) ──
+      # Descomenta si el paquete de ghcr.io es privado:
+      # imagePullSecrets:
+      #   - name: ghcr-secret
+
+      containers:
+        - name: backend
+          image: ghcr.io/josefornesjimenez/4all-backend:latest
+          # Siempre bajar la última imagen (needed para :latest tag)
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3008
+              name: http
+          env:
+            - name: PORT
+              value: "3008"
+            - name: NODE_ENV
+              value: "production"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: 4all-backend-secret
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: 4all-backend-secret
+                  key: JWT_SECRET
+            - name: JWT_EXPIRES_IN
+              valueFrom:
+                secretKeyRef:
+                  name: 4all-backend-secret
+                  key: JWT_EXPIRES_IN
+            - name: CORS_ORIGIN
+              valueFrom:
+                secretKeyRef:
+                  name: 4all-backend-secret
+                  key: CORS_ORIGIN
+          # ── Health checks ────────────────────────────────────────────────────
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3008
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3008
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 3
+          # ── Recursos ─────────────────────────────────────────────────────────
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
