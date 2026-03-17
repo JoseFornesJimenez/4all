@@ -6,8 +6,8 @@
  * con Expo Go sin módulos nativos adicionales.
  */
 
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import LoginScreen        from './screens/LoginScreen';
@@ -16,6 +16,7 @@ import PisoScreen         from './screens/PisoScreen';
 import CompraScreen       from './screens/CompraScreen';
 import IncidenciasScreen  from './screens/IncidenciasScreen';
 import GastosScreen       from './screens/GastosScreen';
+import { api } from './screens/api';
 
 const TABS = [
   { key: 'compra',      label: 'Compra' },
@@ -28,6 +29,24 @@ export default function App() {
   const [user, setUser]     = useState(null);
   const [piso, setPiso]     = useState(null);
   const [tab, setTab]       = useState('compra');
+
+  useEffect(() => {
+    if (screen !== 'Main' || !user?.pisoId || piso) return;
+
+    let active = true;
+
+    api('/piso')
+      .then((data) => {
+        if (active) setPiso(data.piso);
+      })
+      .catch((error) => {
+        if (active) Alert.alert('Error', error.message);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [screen, user, piso]);
 
   const handleLogin = (u) => {
     setUser(u);
@@ -78,7 +97,15 @@ export default function App() {
 
       {/* Header */}
       <View style={s.header}>
-        <Text style={s.headerTitle}>{TABS.find(t => t.key === tab)?.label}</Text>
+        <View style={s.headerInfo}>
+          <Text style={s.headerTitle}>{TABS.find(t => t.key === tab)?.label}</Text>
+          {!!piso?.nombre && (
+            <Text style={s.headerSubtitle}>
+              {piso.nombre}
+              {!!piso?.codigo && ` · Código ${piso.codigo}`}
+            </Text>
+          )}
+        </View>
         <TouchableOpacity onPress={handleSalir}>
           <Text style={s.salir}>Salir</Text>
         </TouchableOpacity>
@@ -126,7 +153,9 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
+  headerInfo: { flex: 1, paddingRight: 12 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1E1B4B' },
+  headerSubtitle: { marginTop: 4, fontSize: 12, color: '#6B7280', fontWeight: '500' },
   salir:       { fontSize: 14, color: '#9CA3AF' },
 
   content: { flex: 1 },

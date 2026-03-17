@@ -45,7 +45,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json());     // Parsear JSON en el body
+// Allow larger JSON bodies because incidencias can include an inline base64 photo.
+app.use(express.json({ limit: '6mb' }));     // Parsear JSON en el body
 app.use(morgan('dev'));      // Logging de requests
 
 // ─── Rutas ────────────────────────────────────────────────────────────────────
