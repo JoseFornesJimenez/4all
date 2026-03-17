@@ -1,0 +1,7 @@
+# ─── Namespace: 4all ──────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: 4all
+  labels:
+    app.kubernetes.io/managed-by: kubectl

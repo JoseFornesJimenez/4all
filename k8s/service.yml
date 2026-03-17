@@ -1,0 +1,17 @@
+# ─── Service: 4all-backend ────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: fourall-backend
+  namespace: 4all
+  labels:
+    app: 4all-backend
+spec:
+  selector:
+    app: 4all-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3008
+      protocol: TCP
+  type: ClusterIP

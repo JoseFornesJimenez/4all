@@ -1,0 +1,40 @@
+# ─── Variables de entorno (NUNCA subir a Git) ─────────────────────────────────
+.env
+.env.local
+.env.*.local
+backend/.env
+mobile/.env
+mobile2/.env
+
+# ─── Node.js ──────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Expo / React Native ──────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDEs ─────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Kubernetes secrets con valores reales ────────────────────────────────────
+# El secret.yml del repo es solo plantilla. Si creas uno con valores reales,
+# nómbralo así y quedará ignorado:
+k8s/secret.real.yml
+k8s/*.secret.yml

@@ -1,0 +1,47 @@
+# ─── IngressRoute: api.rack.local → 4all-backend ─────────────────────────────
+# Traefik v2 CRD (traefik.containo.us/v1alpha1)
+#
+# Dominio interno: api.rack.local
+# El usuario gestiona el redirect externo (api.pandauniverse.es → api.rack.local)
+#
+# El Service referenciado está en namespace '4all'.
+# El IngressRoute va en 'default' (coherente con el resto del cluster).
+---
+# HTTP — para uso interno en la red local (api.rack.local)
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: fourall-api-k8s
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`api.rack.local`)
+      kind: Rule
+      services:
+        - name: fourall-backend
+          namespace: 4all
+          port: 80
+          scheme: http
+---
+# HTTPS — actívalo cuando tengas cert para rack.local o uses el wildcard pandauniverse
+# (descomenta y ajusta el secretName)
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: fourall-api-k8s-https
+#   namespace: default
+# spec:
+#   entryPoints:
+#     - websecure
+#   routes:
+#     - match: Host(`api.pandauniverse.es`)
+#       kind: Rule
+#       services:
+#         - name: fourall-backend
+#           namespace: 4all
+#           port: 80
+#           scheme: http
+#   tls:
+#     secretName: pandauniverse-wildcard-tls
