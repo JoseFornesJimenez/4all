@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Necesitamos usar la camara para adjuntar fotos a las incidencias.",
-        "NSPhotoLibraryUsageDescription": "Necesitamos acceder a tus fotos para adjuntarlas a las incidencias."
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceder a tus fotos para adjuntarlas a las incidencias.",
+        "NSLocationWhenInUseUsageDescription": "Necesitamos tu ubicacion para abrir supermercados y tiendas cercanas en Maps."
       }
     },
     "android": {
@@ -27,6 +28,8 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
         "READ_MEDIA_IMAGES",
         "READ_EXTERNAL_STORAGE"
       ]

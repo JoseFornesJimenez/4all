@@ -1,25 +1,17 @@
-/**
- * CompraScreen.js — Lista de la compra compartida del piso
- *
- * Funcionalidades:
- *   - Ver lista de productos (con pull-to-refresh)
- *   - Añadir producto nuevo
- *   - Marcar como comprado / pendiente (toggle)
- *   - Eliminar producto con swipe o botón
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet,
-  ActivityIndicator, Alert, StatusBar, Platform,
+  ActivityIndicator, Alert, StatusBar, Platform, Linking,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { api } from './api';
 
 export default function CompraScreen() {
-  const [items, setItems]         = useState([]);
-  const [cargando, setCargando]   = useState(true);
-  const [texto, setTexto]         = useState('');
+  const [items, setItems] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [texto, setTexto] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [abriendoMapa, setAbriendoMapa] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
@@ -73,6 +65,37 @@ export default function CompraScreen() {
     ]);
   };
 
+  const abrirSupermercadosCercanos = async () => {
+    try {
+      setAbriendoMapa(true);
+      const permiso = await Location.requestForegroundPermissionsAsync();
+      if (!permiso.granted) {
+        Alert.alert('Permiso requerido', 'Necesitas permitir la ubicación para abrir tiendas cercanas en Maps.');
+        return;
+      }
+
+      const ubicacion = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = ubicacion.coords;
+      const consulta = encodeURIComponent('supermercados OR bazar OR hogar AND abierto ahora en mi ubicación');
+      const url = `https://www.google.com/maps/search/?api=1&query=${consulta}&query_place_id=&center=${latitude},${longitude}`;
+
+      const soportado = await Linking.canOpenURL(url);
+      if (!soportado) {
+        Alert.alert('Error', 'No se ha podido abrir Google Maps en este dispositivo.');
+        return;
+      }
+
+      await Linking.openURL(url);
+    } catch (e) {
+      Alert.alert('Error', 'No se ha podido abrir Maps con tu ubicación actual.');
+    } finally {
+      setAbriendoMapa(false);
+    }
+  };
+
   const pendientes = items.filter(i => !i.completado).length;
   const completados = items.filter(i => i.completado).length;
 
@@ -87,9 +110,15 @@ export default function CompraScreen() {
     <View style={s.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8F7FF" />
 
-      {/* Header */}
       <View style={s.header}>
-        <Text style={s.headerTitle}>Lista de la compra</Text>
+        <View style={s.headerTopRow}>
+          <Text style={s.headerTitle}>Lista de la compra</Text>
+        </View>
+
+        <Text style={s.headerHint}>
+          Abre Maps para ver supermercados, bazares y tiendas del hogar cerca de ti.
+        </Text>
+
         <View style={s.badges}>
           {pendientes > 0 && (
             <View style={s.badge}>
@@ -104,7 +133,6 @@ export default function CompraScreen() {
         </View>
       </View>
 
-      {/* Input añadir */}
       <View style={s.inputRow}>
         <TextInput
           style={s.input}
@@ -123,7 +151,6 @@ export default function CompraScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Lista */}
       <FlatList
         data={items}
         keyExtractor={i => i.id}
@@ -143,17 +170,14 @@ export default function CompraScreen() {
             onLongPress={() => eliminar(item.id, item.nombre)}
             activeOpacity={0.7}
           >
-            {/* Checkbox */}
             <View style={[s.checkbox, item.completado && s.checkboxDone]}>
               {item.completado && <Text style={s.checkmark}>✓</Text>}
             </View>
 
-            {/* Nombre */}
             <Text style={[s.nombre, item.completado && s.tachado]} numberOfLines={2}>
               {item.nombre}
             </Text>
 
-            {/* Botón eliminar */}
             <TouchableOpacity style={s.delBtn} onPress={() => eliminar(item.id, item.nombre)}>
               <Text style={s.delIcon}>×</Text>
             </TouchableOpacity>
@@ -161,6 +185,24 @@ export default function CompraScreen() {
         )}
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       />
+
+      <TouchableOpacity
+        style={[s.floatingMapBtn, abriendoMapa && s.btnOff]}
+        onPress={abrirSupermercadosCercanos}
+        disabled={abriendoMapa}
+        activeOpacity={0.85}
+      >
+        {abriendoMapa ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <View style={s.mapIconWrap}>
+            <View style={[s.mapFold, s.mapFoldLeft]} />
+            <View style={[s.mapFold, s.mapFoldCenter]} />
+            <View style={[s.mapFold, s.mapFoldRight]} />
+            <View style={s.mapPin} />
+          </View>
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
@@ -171,22 +213,27 @@ const GREEN = '#10B981';
 const GREEN_LIGHT = '#ECFDF5';
 
 const s = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: '#F8F7FF', paddingTop: Platform.OS === 'android' ? 8 : 0 },
-  center:        { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  loadingTxt:    { color: '#6366F1', fontSize: 14 },
+  container: { flex: 1, backgroundColor: '#F8F7FF', paddingTop: Platform.OS === 'android' ? 8 : 0 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingTxt: { color: '#6366F1', fontSize: 14 },
 
-  // Header
-  header:        { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
-  headerTitle:   { fontSize: 26, fontWeight: '800', color: '#1E1B4B', letterSpacing: -0.5 },
-  badges:        { flexDirection: 'row', gap: 8, marginTop: 6 },
-  badge:         { backgroundColor: PURPLE_LIGHT, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeTxt:      { color: PURPLE, fontSize: 12, fontWeight: '600' },
-  badgeDone:     { backgroundColor: GREEN_LIGHT },
-  badgeDoneTxt:  { color: GREEN },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTitle: { flex: 1, fontSize: 26, fontWeight: '800', color: '#1E1B4B', letterSpacing: -0.5 },
+  headerHint: { marginTop: 8, color: '#6B7280', fontSize: 13, lineHeight: 18 },
+  badges: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  badge: { backgroundColor: PURPLE_LIGHT, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+  badgeTxt: { color: PURPLE, fontSize: 12, fontWeight: '600' },
+  badgeDone: { backgroundColor: GREEN_LIGHT },
+  badgeDoneTxt: { color: GREEN },
 
-  // Input
-  inputRow:      { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, gap: 10 },
-  input:         {
+  inputRow: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, gap: 10 },
+  input: {
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -200,7 +247,7 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  addBtn:        {
+  addBtn: {
     backgroundColor: PURPLE,
     borderRadius: 14,
     width: 52,
@@ -212,11 +259,10 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  btnOff:        { opacity: 0.4 },
-  addBtnTxt:     { color: '#fff', fontSize: 28, fontWeight: '300', lineHeight: 32 },
+  btnOff: { opacity: 0.4 },
+  addBtnTxt: { color: '#fff', fontSize: 28, fontWeight: '300', lineHeight: 32 },
 
-  // Cards
-  card:          {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -231,10 +277,9 @@ const s = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
-  cardDone:      { backgroundColor: '#FAFAFA', opacity: 0.75 },
+  cardDone: { backgroundColor: '#FAFAFA', opacity: 0.75 },
 
-  // Checkbox
-  checkbox:      {
+  checkbox: {
     width: 26,
     height: 26,
     borderRadius: 8,
@@ -244,13 +289,13 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxDone:  { backgroundColor: GREEN, borderColor: GREEN },
-  checkmark:     { color: '#fff', fontSize: 14, fontWeight: '700' },
+  checkboxDone: { backgroundColor: GREEN, borderColor: GREEN },
+  checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
-  nombre:        { flex: 1, fontSize: 16, color: '#1E1B4B', fontWeight: '500' },
-  tachado:       { textDecorationLine: 'line-through', color: '#9CA3AF', fontWeight: '400' },
+  nombre: { flex: 1, fontSize: 16, color: '#1E1B4B', fontWeight: '500' },
+  tachado: { textDecorationLine: 'line-through', color: '#9CA3AF', fontWeight: '400' },
 
-  delBtn:        {
+  delBtn: {
     width: 30,
     height: 30,
     borderRadius: 8,
@@ -259,11 +304,66 @@ const s = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
-  delIcon:       { color: '#EF4444', fontSize: 20, fontWeight: '400', lineHeight: 22 },
+  delIcon: { color: '#EF4444', fontSize: 20, fontWeight: '400', lineHeight: 22 },
 
-  // Empty state
   emptyContainer: { flex: 1 },
-  emptyWrap:     { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
-  emptyTitle:    { fontSize: 18, fontWeight: '600', color: '#6B7280', marginBottom: 6 },
+  emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#6B7280', marginBottom: 6 },
   emptySubtitle: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', paddingHorizontal: 40 },
+  floatingMapBtn: {
+    position: 'absolute',
+    right: 18,
+    bottom: Platform.OS === 'ios' ? 34 : 20,
+    width: 64,
+    height: 64,
+    borderRadius: 22,
+    backgroundColor: 'rgba(49, 46, 129, 0.88)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#312E81',
+    shadowOpacity: 0.28,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  mapIconWrap: {
+    width: 30,
+    height: 30,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapFold: {
+    position: 'absolute',
+    top: 8,
+    width: 10,
+    height: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  mapFoldLeft: {
+    left: 2,
+    transform: [{ skewY: '-10deg' }],
+    borderTopLeftRadius: 3,
+    borderBottomLeftRadius: 3,
+  },
+  mapFoldCenter: {
+    left: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  mapFoldRight: {
+    left: 18,
+    transform: [{ skewY: '10deg' }],
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  mapPin: {
+    position: 'absolute',
+    top: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+  },
 });

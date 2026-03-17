@@ -70,7 +70,7 @@ function buildImageData(asset) {
   return `data:${mimeType};base64,${asset.base64}`;
 }
 
-export default function IncidenciasScreen() {
+export default function IncidenciasScreen({ user }) {
   const [incidencias, setIncidencias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -291,7 +291,7 @@ export default function IncidenciasScreen() {
 
                 {foto && (
                   <View style={s.photoPreviewWrap}>
-                    <Image source={{ uri: foto }} style={s.photoPreview} />
+                    <Image source={{ uri: foto }} style={s.photoPreview} resizeMode="contain" />
                     <TouchableOpacity style={s.removePhotoBtn} onPress={() => setFoto(null)}>
                       <Text style={s.removePhotoBtnTxt}>Quitar foto</Text>
                     </TouchableOpacity>
@@ -363,8 +363,16 @@ export default function IncidenciasScreen() {
 
           return (
             <View style={s.card}>
-              <View style={s.cardTop}>
-                <Text style={s.cardTitle}>{item.titulo}</Text>
+              <View style={s.postHeader}>
+                <View style={s.userBadge}>
+                  <Text style={s.userBadgeTxt}>
+                    {(item.creadaPor?.nombre || 'U').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={s.postHeaderInfo}>
+                  <Text style={s.postUserName}>{item.creadaPor?.nombre || 'Usuario'}</Text>
+                  <Text style={s.postDate}>{formatFecha(item.createdAt)}</Text>
+                </View>
                 <View style={s.badges}>
                   <View style={[s.badge, { backgroundColor: estadoStyle.bg }]}>
                     <Text style={[s.badgeTxt, { color: estadoStyle.text }]}>
@@ -379,17 +387,26 @@ export default function IncidenciasScreen() {
                 </View>
               </View>
 
+              <Text style={s.cardTitle}>{item.titulo}</Text>
+
               {!!item.descripcion && (
                 <Text style={s.cardDescription}>{item.descripcion}</Text>
               )}
 
               {!!item.foto && (
-                <Image source={{ uri: item.foto }} style={s.cardPhoto} />
+                <Image source={{ uri: item.foto }} style={s.cardPhoto} resizeMode="contain" />
               )}
 
-              <Text style={s.metaText}>
-                Creada por {item.creadaPor?.nombre || 'Usuario'} el {formatFecha(item.createdAt)}
-              </Text>
+              <View style={s.commentRow}>
+                <Text style={s.commentIcon}>💬</Text>
+                <Text style={s.commentText}>
+                  Comentarios proximamente
+                </Text>
+                {user?.id !== item.creadaPor?.id && (
+                  <View style={s.commentDot} />
+                )}
+              </View>
+
               {item.resueltaAt && (
                 <Text style={s.metaText}>
                   Resuelta el {formatFecha(item.resueltaAt)}
@@ -530,7 +547,7 @@ const s = StyleSheet.create({
   },
   photoPreview: {
     width: '100%',
-    height: 180,
+    height: 320,
     borderRadius: 14,
     backgroundColor: '#E5E7EB',
   },
@@ -624,8 +641,39 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
   },
-  cardTitle: {
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  userBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: PURPLE_LIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userBadgeTxt: {
+    color: PURPLE,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  postHeaderInfo: {
     flex: 1,
+  },
+  postUserName: {
+    color: PURPLE_DARK,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  postDate: {
+    marginTop: 2,
+    color: MUTED,
+    fontSize: 12,
+  },
+  cardTitle: {
     fontSize: 17,
     fontWeight: '700',
     color: PURPLE_DARK,
@@ -651,10 +699,31 @@ const s = StyleSheet.create({
   },
   cardPhoto: {
     width: '100%',
-    height: 200,
+    height: 320,
     borderRadius: 14,
     marginTop: 12,
     backgroundColor: '#E5E7EB',
+  },
+  commentRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  commentIcon: {
+    fontSize: 16,
+  },
+  commentText: {
+    color: MUTED,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  commentDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: PURPLE,
+    marginLeft: 'auto',
   },
   metaText: {
     marginTop: 8,

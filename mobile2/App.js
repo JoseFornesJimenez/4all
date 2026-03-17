@@ -16,7 +16,7 @@ import PisoScreen         from './screens/PisoScreen';
 import CompraScreen       from './screens/CompraScreen';
 import IncidenciasScreen  from './screens/IncidenciasScreen';
 import GastosScreen       from './screens/GastosScreen';
-import { api } from './screens/api';
+import { api, setToken } from './screens/api';
 
 const TABS = [
   { key: 'compra',      label: 'Compra' },
@@ -59,9 +59,33 @@ export default function App() {
   };
 
   const handleSalir = () => {
+    setToken(null);
     setUser(null);
     setPiso(null);
     setScreen('Login');
+  };
+
+  const handleSalirDePiso = async () => {
+    try {
+      await api('/piso/salir', { method: 'DELETE' });
+      setPiso(null);
+      setUser((prev) => prev ? { ...prev, pisoId: null } : prev);
+      setScreen('Piso');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const handleMenu = () => {
+    Alert.alert(
+      'Tu cuenta',
+      'Puedes cerrar sesion o salir del piso actual. Ahora mismo la app solo soporta un piso por usuario.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cerrar sesion', onPress: handleSalir },
+        { text: 'Salir del piso', style: 'destructive', onPress: handleSalirDePiso },
+      ]
+    );
   };
 
   if (screen === 'Login') {
@@ -106,16 +130,16 @@ export default function App() {
             </Text>
           )}
         </View>
-        <TouchableOpacity onPress={handleSalir}>
-          <Text style={s.salir}>Salir</Text>
+        <TouchableOpacity onPress={handleMenu} style={s.settingsBtn}>
+          <Text style={s.settingsIcon}>⌘</Text>
         </TouchableOpacity>
       </View>
 
       {/* Contenido */}
       <View style={s.content}>
         {tab === 'compra'      && <CompraScreen />}
-        {tab === 'incidencias' && <IncidenciasScreen />}
-        {tab === 'gastos'      && <GastosScreen />}
+        {tab === 'incidencias' && <IncidenciasScreen user={user} />}
+        {tab === 'gastos'      && <GastosScreen user={user} />}
       </View>
 
       {/* Tab bar */}
@@ -156,7 +180,16 @@ const s = StyleSheet.create({
   headerInfo: { flex: 1, paddingRight: 12 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1E1B4B' },
   headerSubtitle: { marginTop: 4, fontSize: 12, color: '#6B7280', fontWeight: '500' },
-  salir:       { fontSize: 14, color: '#9CA3AF' },
+  settingsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  settingsIcon: { fontSize: 16, color: PURPLE, fontWeight: '700' },
 
   content: { flex: 1 },
 
