@@ -92,6 +92,7 @@ model Incidencia {
   id          String              @id @default(uuid())
   titulo      String
   descripcion String?
+  foto        String?             @db.Text
   estado      EstadoIncidencia    @default(ABIERTA)
   prioridad   PrioridadIncidencia @default(MEDIA)
   createdAt   DateTime            @default(now())

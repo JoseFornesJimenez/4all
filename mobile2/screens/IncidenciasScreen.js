@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList,
-  ActivityIndicator, Alert, StatusBar, Platform,
+  ActivityIndicator, Alert, StatusBar, Platform, Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { api } from './api';
 
 const PURPLE = '#6366F1';
@@ -13,19 +14,15 @@ const CARD = '#FFFFFF';
 const BORDER = '#E5E7EB';
 const MUTED = '#6B7280';
 
-// Estados que puede filtrar la pantalla.
 const ESTADOS = ['TODAS', 'ABIERTA', 'EN_PROGRESO', 'RESUELTA'];
-// Prioridades disponibles al crear una incidencia.
 const PRIORIDADES = ['BAJA', 'MEDIA', 'ALTA', 'URGENTE'];
 
-// Textos legibles para mostrar los enums del backend.
 const ESTADO_LABELS = {
   ABIERTA: 'Abierta',
   EN_PROGRESO: 'En progreso',
   RESUELTA: 'Resuelta',
 };
 
-// Textos legibles para mostrar la prioridad.
 const PRIORIDAD_LABELS = {
   BAJA: 'Baja',
   MEDIA: 'Media',
@@ -33,14 +30,12 @@ const PRIORIDAD_LABELS = {
   URGENTE: 'Urgente',
 };
 
-// Colores visuales según el estado actual de la incidencia.
 const ESTADO_COLORS = {
   ABIERTA: { bg: '#FEF3C7', text: '#B45309' },
   EN_PROGRESO: { bg: PURPLE_LIGHT, text: PURPLE },
   RESUELTA: { bg: '#DCFCE7', text: '#15803D' },
 };
 
-// Colores visuales según la prioridad de la incidencia.
 const PRIORIDAD_COLORS = {
   BAJA: { bg: '#F3F4F6', text: '#4B5563' },
   MEDIA: { bg: PURPLE_LIGHT, text: PURPLE },
@@ -48,21 +43,18 @@ const PRIORIDAD_COLORS = {
   URGENTE: { bg: '#FFE4E6', text: '#BE123C' },
 };
 
-// Define el siguiente estado cuando el usuario pulsa el botón de acción rápida.
 function getNextEstado(estadoActual) {
   if (estadoActual === 'ABIERTA') return 'EN_PROGRESO';
   if (estadoActual === 'EN_PROGRESO') return 'RESUELTA';
   return 'ABIERTA';
 }
 
-// Texto del botón según el estado actual.
 function getEstadoActionLabel(estadoActual) {
   if (estadoActual === 'ABIERTA') return 'Empezar';
   if (estadoActual === 'EN_PROGRESO') return 'Resolver';
   return 'Reabrir';
 }
 
-// Formatea fechas del backend en un formato corto legible.
 function formatFecha(value) {
   if (!value) return '';
   return new Date(value).toLocaleDateString('es-ES', {
@@ -72,8 +64,13 @@ function formatFecha(value) {
   });
 }
 
+function buildImageData(asset) {
+  if (!asset?.base64) return null;
+  const mimeType = asset.mimeType || 'image/jpeg';
+  return `data:${mimeType};base64,${asset.base64}`;
+}
+
 export default function IncidenciasScreen() {
-  // Estado principal de la pantalla: lista, formularios y acciones en curso.
   const [incidencias, setIncidencias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -83,8 +80,8 @@ export default function IncidenciasScreen() {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [prioridad, setPrioridad] = useState('MEDIA');
+  const [foto, setFoto] = useState(null);
 
-  // Carga la lista de incidencias desde el backend, aplicando filtro si existe.
   const cargar = useCallback(async () => {
     try {
       const query = filtroEstado === 'TODAS' ? '' : `?estado=${filtroEstado}`;
@@ -97,13 +94,50 @@ export default function IncidenciasScreen() {
     }
   }, [filtroEstado]);
 
-  // Recarga la lista al entrar en la pantalla o al cambiar el filtro.
   useEffect(() => {
     setCargando(true);
     cargar();
   }, [cargar]);
 
-  // Crea una nueva incidencia con los datos del formulario superior.
+  async function seleccionarDeGaleria() {
+    const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permiso.granted) {
+      Alert.alert('Permiso requerido', 'Necesitas permitir el acceso a tus fotos.');
+      return;
+    }
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5,
+      base64: true,
+    });
+
+    if (!resultado.canceled && resultado.assets?.[0]) {
+      setFoto(buildImageData(resultado.assets[0]));
+    }
+  }
+
+  async function hacerFoto() {
+    const permiso = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permiso.granted) {
+      Alert.alert('Permiso requerido', 'Necesitas permitir el uso de la camara.');
+      return;
+    }
+
+    const resultado = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5,
+      base64: true,
+    });
+
+    if (!resultado.canceled && resultado.assets?.[0]) {
+      setFoto(buildImageData(resultado.assets[0]));
+    }
+  }
+
   const crearIncidencia = async () => {
     if (!titulo.trim()) {
       return Alert.alert('Error', 'Escribe un titulo para la incidencia');
@@ -117,12 +151,14 @@ export default function IncidenciasScreen() {
           titulo: titulo.trim(),
           descripcion: descripcion.trim() || undefined,
           prioridad,
+          foto: foto || undefined,
         }),
       });
 
       setTitulo('');
       setDescripcion('');
       setPrioridad('MEDIA');
+      setFoto(null);
       setMostrarFormulario(false);
 
       if (filtroEstado === 'TODAS' || filtroEstado === data.incidencia.estado) {
@@ -135,7 +171,6 @@ export default function IncidenciasScreen() {
     }
   };
 
-  // Cambia el estado de una incidencia siguiendo el flujo simple de trabajo.
   const cambiarEstado = async (incidencia) => {
     const estado = getNextEstado(incidencia.estado);
 
@@ -160,7 +195,6 @@ export default function IncidenciasScreen() {
     }
   };
 
-  // Elimina una incidencia tras pedir confirmación al usuario.
   const eliminarIncidencia = async (incidencia) => {
     Alert.alert(
       'Eliminar incidencia',
@@ -197,7 +231,7 @@ export default function IncidenciasScreen() {
 
   return (
     <View style={s.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF7ED" />
+      <StatusBar barStyle="dark-content" backgroundColor={BG} />
 
       <FlatList
         data={incidencias}
@@ -206,15 +240,13 @@ export default function IncidenciasScreen() {
         refreshing={cargando}
         ListHeaderComponent={
           <>
-            {/* Cabecera explicativa de la sección */}
             <View style={s.header}>
               <Text style={s.headerTitle}>Incidencias del piso</Text>
               <Text style={s.headerSubtitle}>
-                Registra problemas, cambia su estado y revisa lo que sigue pendiente.
+                Registra problemas, añade una foto y revisa lo que sigue pendiente.
               </Text>
             </View>
 
-            {/* Botón para mostrar u ocultar el formulario de creación */}
             <TouchableOpacity
               style={s.toggleCreateBtn}
               onPress={() => setMostrarFormulario(prev => !prev)}
@@ -225,7 +257,6 @@ export default function IncidenciasScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Formulario progresivo para no cargar la pantalla principal */}
             {mostrarFormulario && (
               <View style={s.formCard}>
                 <Text style={s.sectionTitle}>1. Titulo</Text>
@@ -248,8 +279,26 @@ export default function IncidenciasScreen() {
                   textAlignVertical="top"
                 />
 
-                <Text style={s.sectionTitle}>3. Prioridad</Text>
-                {/* Selector de prioridad antes de enviar al backend */}
+                <Text style={s.sectionTitle}>3. Foto</Text>
+                <View style={s.photoActions}>
+                  <TouchableOpacity style={s.photoBtn} onPress={hacerFoto}>
+                    <Text style={s.photoBtnTxt}>Hacer foto</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.photoBtn} onPress={seleccionarDeGaleria}>
+                    <Text style={s.photoBtnTxt}>Subir desde fotos</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {foto && (
+                  <View style={s.photoPreviewWrap}>
+                    <Image source={{ uri: foto }} style={s.photoPreview} />
+                    <TouchableOpacity style={s.removePhotoBtn} onPress={() => setFoto(null)}>
+                      <Text style={s.removePhotoBtnTxt}>Quitar foto</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <Text style={s.sectionTitle}>4. Prioridad</Text>
                 <View style={s.priorityRow}>
                   {PRIORIDADES.map((nivel) => {
                     const active = prioridad === nivel;
@@ -267,7 +316,7 @@ export default function IncidenciasScreen() {
                   })}
                 </View>
 
-                <Text style={s.sectionTitle}>4. Crear</Text>
+                <Text style={s.sectionTitle}>5. Crear</Text>
                 <TouchableOpacity
                   style={[s.createBtn, guardando && s.btnOff]}
                   onPress={crearIncidencia}
@@ -280,7 +329,6 @@ export default function IncidenciasScreen() {
               </View>
             )}
 
-            {/* Filtros por estado usando el soporte ya existente del backend */}
             <View style={s.filtersRow}>
               {ESTADOS.map((estado) => {
                 const active = filtroEstado === estado;
@@ -301,7 +349,6 @@ export default function IncidenciasScreen() {
         }
         contentContainerStyle={s.listContent}
         ListEmptyComponent={
-          // Estado vacío cuando no hay incidencias o el filtro no devuelve resultados.
           <View style={s.emptyWrap}>
             <Text style={s.emptyTitle}>No hay incidencias en este filtro</Text>
             <Text style={s.emptySubtitle}>
@@ -315,7 +362,6 @@ export default function IncidenciasScreen() {
           const accionando = accionandoId === item.id;
 
           return (
-            // Tarjeta resumen de cada incidencia con sus acciones principales.
             <View style={s.card}>
               <View style={s.cardTop}>
                 <Text style={s.cardTitle}>{item.titulo}</Text>
@@ -335,6 +381,10 @@ export default function IncidenciasScreen() {
 
               {!!item.descripcion && (
                 <Text style={s.cardDescription}>{item.descripcion}</Text>
+              )}
+
+              {!!item.foto && (
+                <Image source={{ uri: item.foto }} style={s.cardPhoto} />
               )}
 
               <Text style={s.metaText}>
@@ -458,6 +508,45 @@ const s = StyleSheet.create({
   textarea: {
     minHeight: 88,
   },
+  photoActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  photoBtn: {
+    flex: 1,
+    backgroundColor: PURPLE_LIGHT,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  photoBtnTxt: {
+    color: PURPLE,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  photoPreviewWrap: {
+    marginBottom: 14,
+  },
+  photoPreview: {
+    width: '100%',
+    height: 180,
+    borderRadius: 14,
+    backgroundColor: '#E5E7EB',
+  },
+  removePhotoBtn: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  removePhotoBtnTxt: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '700',
+  },
   priorityRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -559,6 +648,13 @@ const s = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: '#57534E',
+  },
+  cardPhoto: {
+    width: '100%',
+    height: 200,
+    borderRadius: 14,
+    marginTop: 12,
+    backgroundColor: '#E5E7EB',
   },
   metaText: {
     marginTop: 8,
