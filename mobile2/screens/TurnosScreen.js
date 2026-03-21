@@ -20,9 +20,9 @@ const RED_LIGHT = '#FEE2E2';
 
 const SHIFT_OPTIONS = [
   'Limpieza cocina',
-  'Limpieza bano',
+  'Limpieza baño/s',
   'Sacar basura',
-  'Aspirar salon',
+  'Aspirar salón',
   'Compra semanal',
   'Otro',
 ];
