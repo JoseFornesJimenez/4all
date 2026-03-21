@@ -5,11 +5,28 @@ const prisma = new PrismaClient();
 
 const AUTO_TASKS = [
   'Limpieza cocina',
-  'Limpieza bano',
+  'Limpieza baño/s',
   'Sacar basura',
-  'Aspirar salon',
+  'Aspirar salón',
   'Compra semanal',
+  'Otros'
 ];
+
+const parseDateInput = (value, { endOfDay = false } = {}) => {
+  if (!value) return null;
+
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return endOfDay
+      ? new Date(year, month - 1, day, 23, 59, 59, 999)
+      : new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+};
 
 const toDateKey = (date) => {
   const d = new Date(date);
@@ -20,7 +37,9 @@ const toDateKey = (date) => {
 };
 
 const getWeekRange = (baseDateInput) => {
-  const base = baseDateInput ? new Date(baseDateInput) : new Date();
+  const base = baseDateInput
+    ? (parseDateInput(baseDateInput) || parseDateInput(baseDateInput, { endOfDay: true }))
+    : new Date();
   if (Number.isNaN(base.getTime())) return null;
 
   const start = new Date(base);
@@ -45,13 +64,13 @@ const listarTurnos = async (req, res, next) => {
     if (desde || hasta) {
       where.fecha = {};
       if (desde) {
-        const d = new Date(desde);
-        if (Number.isNaN(d.getTime())) return res.status(400).json({ error: 'Parametro "desde" invalido' });
+        const d = parseDateInput(desde);
+        if (!d) return res.status(400).json({ error: 'Parametro "desde" invalido' });
         where.fecha.gte = d;
       }
       if (hasta) {
-        const d = new Date(hasta);
-        if (Number.isNaN(d.getTime())) return res.status(400).json({ error: 'Parametro "hasta" invalido' });
+        const d = parseDateInput(hasta, { endOfDay: true });
+        if (!d) return res.status(400).json({ error: 'Parametro "hasta" invalido' });
         where.fecha.lte = d;
       }
     }
@@ -164,10 +183,11 @@ const crearTurno = async (req, res, next) => {
       return res.status(400).json({ error: 'Titulo, fecha y asignadoAId son obligatorios' });
     }
 
-    const fechaTurno = new Date(fecha);
-    if (Number.isNaN(fechaTurno.getTime())) {
+    const fechaTurno = parseDateInput(fecha) || parseDateInput(fecha, { endOfDay: true });
+    if (!fechaTurno) {
       return res.status(400).json({ error: 'La fecha no es valida' });
     }
+    fechaTurno.setHours(12, 0, 0, 0);
 
     const miembro = await prisma.user.findFirst({
       where: {
