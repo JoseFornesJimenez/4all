@@ -34,6 +34,7 @@ const pisoRoutes = require('./routes/piso.routes');
 const compraRoutes = require('./routes/compra.routes');
 const incidenciaRoutes = require('./routes/incidencia.routes');
 const gastoRoutes = require('./routes/gasto.routes');
+const turnoRoutes = require('./routes/turno.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -55,6 +56,7 @@ app.use('/api/piso',        pisoRoutes);
 app.use('/api/compra',      compraRoutes);
 app.use('/api/incidencias', incidenciaRoutes);
 app.use('/api/gastos',      gastoRoutes);
+app.use('/api/turnos',      turnoRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {

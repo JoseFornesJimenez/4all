@@ -16,12 +16,14 @@ import PisoScreen         from './screens/PisoScreen';
 import CompraScreen       from './screens/CompraScreen';
 import IncidenciasScreen  from './screens/IncidenciasScreen';
 import GastosScreen       from './screens/GastosScreen';
+import TurnosScreen       from './screens/TurnosScreen';
 import { api } from './screens/api';
 
 const TABS = [
   { key: 'compra',      label: 'Compra' },
   { key: 'incidencias', label: 'Incidencias' },
   { key: 'gastos',      label: 'Gastos' },
+  { key: 'turnos',      label: 'Turnos' },
 ];
 
 export default function App() {
@@ -116,6 +118,7 @@ export default function App() {
         {tab === 'compra'      && <CompraScreen />}
         {tab === 'incidencias' && <IncidenciasScreen />}
         {tab === 'gastos'      && <GastosScreen />}
+        {tab === 'turnos'      && <TurnosScreen />}
       </View>
 
       {/* Tab bar */}

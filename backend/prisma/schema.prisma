@@ -30,6 +30,10 @@ model User {
   incidenciasCreadas Incidencia[] @relation("CreadaBy")
   incidenciasAsignadas Incidencia[] @relation("AsignadaA")
   gastosCreados     Gasto[]        @relation("PagadoPor")
+  turnosAsignados   Turno[]        @relation("TurnoAsignadoA")
+  turnosCreados     Turno[]        @relation("TurnoCreadoPor")
+  solicitudesCambioEnviadas SolicitudCambioTurno[] @relation("SolicitudCambioSolicitante")
+  solicitudesCambioRecibidas SolicitudCambioTurno[] @relation("SolicitudCambioNuevoAsignado")
   deudas            Deuda[]        @relation("Deudor")
   acreedores        Deuda[]        @relation("Acreedor")
 
@@ -52,8 +56,63 @@ model Piso {
   listaCompra ItemCompra[]
   incidencias Incidencia[]
   gastos      Gasto[]
+  turnos      Turno[]
 
   @@map("pisos")
+}
+
+// ─── TURNOS Y CALENDARIO ─────────────────────────────────────────────────────
+enum EstadoTurno {
+  PENDIENTE
+  HECHO
+}
+
+model Turno {
+  id          String      @id @default(uuid())
+  titulo      String
+  fecha       DateTime
+  estado      EstadoTurno @default(PENDIENTE)
+  notas       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relaciones
+  pisoId        String
+  piso          Piso      @relation(fields: [pisoId], references: [id], onDelete: Cascade)
+  asignadoAId   String
+  asignadoA     User      @relation("TurnoAsignadoA", fields: [asignadoAId], references: [id])
+  creadoPorId   String
+  creadoPor     User      @relation("TurnoCreadoPor", fields: [creadoPorId], references: [id])
+  solicitudesCambio SolicitudCambioTurno[]
+
+  @@index([pisoId, fecha])
+  @@map("turnos")
+}
+
+enum EstadoSolicitudCambioTurno {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+}
+
+model SolicitudCambioTurno {
+  id              String                     @id @default(uuid())
+  estado          EstadoSolicitudCambioTurno @default(PENDIENTE)
+  mensaje         String?
+  createdAt       DateTime                   @default(now())
+  respondedAt     DateTime?
+
+  // Relaciones
+  turnoId         String
+  turno           Turno                      @relation(fields: [turnoId], references: [id], onDelete: Cascade)
+  solicitanteId   String
+  solicitante     User                       @relation("SolicitudCambioSolicitante", fields: [solicitanteId], references: [id])
+  nuevoAsignadoId String
+  nuevoAsignado   User                       @relation("SolicitudCambioNuevoAsignado", fields: [nuevoAsignadoId], references: [id])
+
+  @@index([nuevoAsignadoId, estado])
+  @@index([turnoId, estado])
+  @@map("solicitudes_cambio_turno")
 }
 
 // ─── LISTA DE LA COMPRA ───────────────────────────────────────────────────────
