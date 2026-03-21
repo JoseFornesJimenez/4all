@@ -12,6 +12,32 @@ const AUTO_TASKS = [
   'Otro',
 ];
 
+const normalizeTaskTitle = (rawTitle) => {
+  if (!rawTitle || typeof rawTitle !== 'string') return '';
+
+  const normalized = rawTitle
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const titleMap = {
+    'limpieza cocina': 'Limpieza cocina',
+    'limpieza bano': 'Limpieza baño/s',
+    'limpieza bano/s': 'Limpieza baño/s',
+    'limpieza baño/s': 'Limpieza baño/s',
+    'sacar basura': 'Sacar basura',
+    'aspirar salon': 'Aspirar salón',
+    'aspirar salón': 'Aspirar salón',
+    'compra semanal': 'Compra semanal',
+    'otro': 'Otro',
+    'otros': 'Otro',
+  };
+
+  return titleMap[normalized] || rawTitle.trim();
+};
+
 const parseDateInput = (value, { endOfDay = false } = {}) => {
   if (!value) return null;
 
@@ -90,7 +116,12 @@ const listarTurnos = async (req, res, next) => {
       orderBy: [{ fecha: 'asc' }, { createdAt: 'asc' }],
     });
 
-    res.json({ turnos });
+    res.json({
+      turnos: turnos.map((t) => ({
+        ...t,
+        titulo: normalizeTaskTitle(t.titulo),
+      })),
+    });
   } catch (error) {
     next(error);
   }
@@ -134,7 +165,9 @@ const autoGenerarSemana = async (req, res, next) => {
       },
     });
 
-    const existentesMap = new Map(existentes.map((t) => [`${toDateKey(t.fecha)}|${t.titulo}`, t]));
+    const existentesMap = new Map(
+      existentes.map((t) => [`${toDateKey(t.fecha)}|${normalizeTaskTitle(t.titulo)}`, t])
+    );
     const weekIndex = Math.floor(range.start.getTime() / (7 * 24 * 60 * 60 * 1000));
     const todayStart = getTodayStart();
 
@@ -183,6 +216,15 @@ const autoGenerarSemana = async (req, res, next) => {
           })
         );
       }
+
+      if (existente.notas === 'Generado automaticamente' && existente.titulo !== titulo) {
+        actualizaciones.push(
+          prisma.turno.update({
+            where: { id: existente.id },
+            data: { titulo },
+          })
+        );
+      }
     });
 
     if (nuevosTurnos.length > 0) {
@@ -225,8 +267,9 @@ const autoGenerarSemana = async (req, res, next) => {
 const crearTurno = async (req, res, next) => {
   try {
     const { titulo, fecha, asignadoAId, notas } = req.body;
+    const tituloNormalizado = normalizeTaskTitle(titulo);
 
-    if (!titulo || !fecha || !asignadoAId) {
+    if (!tituloNormalizado || !fecha || !asignadoAId) {
       return res.status(400).json({ error: 'Titulo, fecha y asignadoAId son obligatorios' });
     }
 
@@ -250,7 +293,7 @@ const crearTurno = async (req, res, next) => {
 
     const turno = await prisma.turno.create({
       data: {
-        titulo: titulo.trim(),
+        titulo: tituloNormalizado,
         fecha: fechaTurno,
         notas: notas?.trim() || null,
         pisoId: req.user.pisoId,
