@@ -9,7 +9,7 @@ const AUTO_TASKS = [
   'Sacar basura',
   'Aspirar salón',
   'Compra semanal',
-  'Otros'
+  'Otro',
 ];
 
 const parseDateInput = (value, { endOfDay = false } = {}) => {
@@ -55,6 +55,12 @@ const getWeekRange = (baseDateInput) => {
   return { start, end };
 };
 
+const getTodayStart = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
 // ─── GET /api/turnos ──────────────────────────────────────────────────────────
 const listarTurnos = async (req, res, next) => {
   try {
@@ -93,7 +99,7 @@ const listarTurnos = async (req, res, next) => {
 // ─── POST /api/turnos/auto-generar-semana ────────────────────────────────────
 const autoGenerarSemana = async (req, res, next) => {
   try {
-    const { fechaBase } = req.body;
+    const { fechaBase, forzarReasignacion = false } = req.body;
     const range = getWeekRange(fechaBase);
 
     if (!range) {
@@ -118,34 +124,73 @@ const autoGenerarSemana = async (req, res, next) => {
           lte: range.end,
         },
       },
-      select: { fecha: true, titulo: true },
+      select: {
+        id: true,
+        fecha: true,
+        titulo: true,
+        estado: true,
+        notas: true,
+        asignadoAId: true,
+      },
     });
 
-    const existentesSet = new Set(existentes.map((t) => `${toDateKey(t.fecha)}|${t.titulo}`));
+    const existentesMap = new Map(existentes.map((t) => [`${toDateKey(t.fecha)}|${t.titulo}`, t]));
     const weekIndex = Math.floor(range.start.getTime() / (7 * 24 * 60 * 60 * 1000));
+    const todayStart = getTodayStart();
 
     const nuevosTurnos = [];
+    const actualizaciones = [];
+
+    const autoPendientesFuturos = existentes.filter(
+      (t) => t.notas === 'Generado automaticamente' && t.estado === 'PENDIENTE' && new Date(t.fecha) >= todayStart
+    );
+    const asignadosActuales = new Set(autoPendientesFuturos.map((t) => t.asignadoAId));
+    const faltaRepresentacion = miembros.some((m) => !asignadosActuales.has(m.id));
+
+    const debeReasignar = !!forzarReasignacion || faltaRepresentacion;
+
     AUTO_TASKS.forEach((titulo, index) => {
       const fecha = new Date(range.start);
       fecha.setDate(range.start.getDate() + index);
       fecha.setHours(12, 0, 0, 0);
       const key = `${toDateKey(fecha)}|${titulo}`;
+      const asignadoEsperado = miembros[(weekIndex + index) % miembros.length];
+      const existente = existentesMap.get(key);
 
-      if (!existentesSet.has(key)) {
-        const asignadoA = miembros[(weekIndex + index) % miembros.length];
+      if (!existente) {
         nuevosTurnos.push({
           titulo,
           fecha,
           pisoId: req.user.pisoId,
-          asignadoAId: asignadoA.id,
+          asignadoAId: asignadoEsperado.id,
           creadoPorId: req.user.id,
           notas: 'Generado automaticamente',
         });
+        return;
+      }
+
+      if (
+        debeReasignar
+        && existente.notas === 'Generado automaticamente'
+        && existente.estado === 'PENDIENTE'
+        && new Date(existente.fecha) >= todayStart
+        && existente.asignadoAId !== asignadoEsperado.id
+      ) {
+        actualizaciones.push(
+          prisma.turno.update({
+            where: { id: existente.id },
+            data: { asignadoAId: asignadoEsperado.id },
+          })
+        );
       }
     });
 
     if (nuevosTurnos.length > 0) {
       await prisma.turno.createMany({ data: nuevosTurnos });
+    }
+
+    if (actualizaciones.length > 0) {
+      await prisma.$transaction(actualizaciones);
     }
 
     const turnosSemana = await prisma.turno.findMany({
@@ -165,6 +210,8 @@ const autoGenerarSemana = async (req, res, next) => {
 
     res.status(201).json({
       creados: nuevosTurnos.length,
+      reasignados: actualizaciones.length,
+      forzado: !!forzarReasignacion,
       weekStart: range.start,
       weekEnd: range.end,
       turnos: turnosSemana,
@@ -238,6 +285,13 @@ const toggleTurno = async (req, res, next) => {
 
     if (turno.asignadoAId !== req.user.id) {
       return res.status(403).json({ error: 'Solo la persona asignada puede cambiar el estado' });
+    }
+
+    const todayStart = getTodayStart();
+    const fechaTurno = new Date(turno.fecha);
+    fechaTurno.setHours(0, 0, 0, 0);
+    if (fechaTurno > todayStart) {
+      return res.status(400).json({ error: 'Solo puedes marcar este turno cuando llegue su dia' });
     }
 
     const turnoActualizado = await prisma.turno.update({
