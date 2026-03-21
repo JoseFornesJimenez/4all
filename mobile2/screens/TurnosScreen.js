@@ -101,6 +101,14 @@ function formatWeekLabel(baseDate) {
   return `${startLabel} - ${endLabel}`;
 }
 
+function isFutureIsoDate(value) {
+  const turno = parseIsoLocalDate(value);
+  turno.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return turno > today;
+}
+
 function buildMonthCells(monthDate) {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -267,7 +275,10 @@ export default function TurnosScreen() {
       setGenerandoAuto(true);
       await api('/turnos/auto-generar-semana', {
         method: 'POST',
-        body: JSON.stringify({ fechaBase: toIsoDate(weekRange.start) }),
+        body: JSON.stringify({
+          fechaBase: toIsoDate(weekRange.start),
+          forzarReasignacion: true,
+        }),
       });
       await cargarTodo();
     } catch (e) {
@@ -389,7 +400,7 @@ export default function TurnosScreen() {
       >
         {generandoAuto
           ? <ActivityIndicator color="#fff" />
-          : <Text style={s.autoBtnTxt}>Auto-generar semana</Text>}
+          : <Text style={s.autoBtnTxt}>Repartir de nuevo la semana</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -595,6 +606,7 @@ export default function TurnosScreen() {
     const hecho = item.estado === 'HECHO';
     const accionando = accionandoId === item.id;
     const esMio = item.asignadoAId === miUsuario?.id;
+    const esFuturo = isFutureIsoDate(item.fecha);
     const openSwap = openSwapTurnoId === item.id;
     const posibles = miembros.filter((m) => m.id !== miUsuario?.id);
 
@@ -625,11 +637,15 @@ export default function TurnosScreen() {
 
         <View style={s.actionsRow}>
           <TouchableOpacity
-            style={[s.actionBtn, s.actionDone, (!esMio || accionando) && s.btnOff]}
+            style={[s.actionBtn, s.actionDone, (!esMio || accionando || esFuturo) && s.btnOff]}
             onPress={() => toggleTurno(item.id)}
-            disabled={accionando || !esMio}
+            disabled={accionando || !esMio || esFuturo}
           >
-            <Text style={s.actionDoneTxt}>{esMio ? (hecho ? 'Marcar pendiente' : 'Marcar hecho') : 'Solo asignado'}</Text>
+            <Text style={s.actionDoneTxt}>
+              {esMio
+                ? (esFuturo ? 'Disponible el dia del turno' : (hecho ? 'Deshacer' : 'Marcar hecho'))
+                : 'Solo asignado'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
