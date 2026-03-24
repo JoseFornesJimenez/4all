@@ -73,7 +73,7 @@ function buildLiquidaciones(balance) {
   return pagos;
 }
 
-export default function GastosScreen() {
+export default function GastosScreen({ user }) {
   const [gastos, setGastos] = useState([]);
   const [balance, setBalance] = useState([]);
   const [miembros, setMiembros] = useState([]);
@@ -211,7 +211,7 @@ export default function GastosScreen() {
         activeOpacity={0.85}
       >
         <Text style={s.toggleCreateBtnTxt}>
-          {mostrarFormulario ? 'Ocultar formulario' : 'Registrar gasto del piso'}
+          {mostrarFormulario ? 'Ocultar formulario' : 'Registrar gasto'}
         </Text>
       </TouchableOpacity>
 
@@ -265,7 +265,7 @@ export default function GastosScreen() {
     <View style={s.tabsRow}>
       {[
         { key: 'gastos', label: 'Gastos' },
-        { key: 'deudas', label: 'Deudas' },
+        { key: 'deudas', label: 'Mis deudas' },
         { key: 'balance', label: 'Balance final' },
       ].map((item) => {
         const active = tab === item.key;
@@ -344,15 +344,15 @@ export default function GastosScreen() {
   const renderDeudas = () => {
     const deudasPendientes = gastos.flatMap((gasto) =>
       gasto.deudas
-        .filter((deuda) => !deuda.pagada)
+        .filter((deuda) => !deuda.pagada && deuda.deudorId === user?.id)
         .map((deuda) => ({ ...deuda, gastoDescripcion: gasto.descripcion }))
     );
 
     if (deudasPendientes.length === 0) {
       return (
         <View style={s.emptyWrap}>
-          <Text style={s.emptyTitle}>No hay deudas pendientes</Text>
-          <Text style={s.emptySubtitle}>Todo lo registrado esta al dia.</Text>
+          <Text style={s.emptyTitle}>No tienes deudas pendientes</Text>
+          <Text style={s.emptySubtitle}>Ahora mismo no debes nada a nadie.</Text>
         </View>
       );
     }
@@ -365,7 +365,7 @@ export default function GastosScreen() {
             <View key={deuda.id} style={s.card}>
               <Text style={s.cardTitle}>{deuda.gastoDescripcion}</Text>
               <Text style={s.cardMeta}>
-                {deuda.deudor?.nombre} debe a {deuda.acreedor?.nombre}
+                Debes a {deuda.acreedor?.nombre}
               </Text>
               <Text style={s.bigDebtAmount}>{formatMoney(deuda.monto)}</Text>
               <TouchableOpacity

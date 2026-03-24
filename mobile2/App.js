@@ -1,36 +1,36 @@
 /**
- * App.js — Punto de entrada de la aplicación
+ * App.js - Punto de entrada de la aplicacion
  *
- * Gestiona la navegación entre pantallas usando useState.
- * No se usa ninguna librería de navegación para mantener compatibilidad
- * con Expo Go sin módulos nativos adicionales.
+ * Gestiona la navegacion entre pantallas usando useState.
+ * No se usa ninguna libreria de navegacion para mantener compatibilidad
+ * con Expo Go sin modulos nativos adicionales.
  */
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-import LoginScreen        from './screens/LoginScreen';
-import RegisterScreen     from './screens/RegisterScreen';
-import PisoScreen         from './screens/PisoScreen';
-import CompraScreen       from './screens/CompraScreen';
-import IncidenciasScreen  from './screens/IncidenciasScreen';
-import GastosScreen       from './screens/GastosScreen';
-import TurnosScreen       from './screens/TurnosScreen';
-import { api } from './screens/api';
+import LoginScreen from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import PisoScreen from './screens/PisoScreen';
+import CompraScreen from './screens/CompraScreen';
+import IncidenciasScreen from './screens/IncidenciasScreen';
+import GastosScreen from './screens/GastosScreen';
+import TurnosScreen from './screens/TurnosScreen';
+import { api, setToken } from './screens/api';
 
 const TABS = [
-  { key: 'compra',      label: 'Compra' },
+  { key: 'compra', label: 'Compra' },
   { key: 'incidencias', label: 'Incidencias' },
-  { key: 'gastos',      label: 'Gastos' },
-  { key: 'turnos',      label: 'Turnos' },
+  { key: 'gastos', label: 'Gastos' },
+  { key: 'turnos', label: 'Turnos' },
 ];
 
 export default function App() {
   const [screen, setScreen] = useState('Login');
-  const [user, setUser]     = useState(null);
-  const [piso, setPiso]     = useState(null);
-  const [tab, setTab]       = useState('compra');
+  const [user, setUser] = useState(null);
+  const [piso, setPiso] = useState(null);
+  const [tab, setTab] = useState('compra');
 
   useEffect(() => {
     if (screen !== 'Main' || !user?.pisoId || piso) return;
@@ -61,9 +61,33 @@ export default function App() {
   };
 
   const handleSalir = () => {
+    setToken(null);
     setUser(null);
     setPiso(null);
     setScreen('Login');
+  };
+
+  const handleSalirDePiso = async () => {
+    try {
+      await api('/piso/salir', { method: 'DELETE' });
+      setPiso(null);
+      setUser((prev) => (prev ? { ...prev, pisoId: null } : prev));
+      setScreen('Piso');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const handleMenu = () => {
+    Alert.alert(
+      'Tu cuenta',
+      'Puedes cerrar sesion o salir del piso actual. Ahora mismo la app solo soporta un piso por usuario.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Cerrar sesion', onPress: handleSalir },
+        { text: 'Salir del piso', style: 'destructive', onPress: handleSalirDePiso },
+      ]
+    );
   };
 
   if (screen === 'Login') {
@@ -97,42 +121,37 @@ export default function App() {
     <View style={s.container}>
       <StatusBar style="dark" />
 
-      {/* Header */}
       <View style={s.header}>
         <View style={s.headerInfo}>
-          <Text style={s.headerTitle}>{TABS.find(t => t.key === tab)?.label}</Text>
+          <Text style={s.headerTitle}>{TABS.find((t) => t.key === tab)?.label}</Text>
           {!!piso?.nombre && (
             <Text style={s.headerSubtitle}>
               {piso.nombre}
-              {!!piso?.codigo && ` · Código ${piso.codigo}`}
+              {!!piso?.codigo && ` - Codigo ${piso.codigo}`}
             </Text>
           )}
         </View>
-        <TouchableOpacity onPress={handleSalir}>
-          <Text style={s.salir}>Salir</Text>
+        <TouchableOpacity onPress={handleMenu} style={s.settingsBtn}>
+          <Text style={s.settingsIcon}>C</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Contenido */}
       <View style={s.content}>
-        {tab === 'compra'      && <CompraScreen />}
-        {tab === 'incidencias' && <IncidenciasScreen />}
-        {tab === 'gastos'      && <GastosScreen />}
-        {tab === 'turnos'      && <TurnosScreen />}
+        {tab === 'compra' && <CompraScreen />}
+        {tab === 'incidencias' && <IncidenciasScreen user={user} />}
+        {tab === 'gastos' && <GastosScreen user={user} />}
+        {tab === 'turnos' && <TurnosScreen />}
       </View>
 
-      {/* Tab bar */}
       <View style={s.tabBar}>
-        {TABS.map(t => (
+        {TABS.map((t) => (
           <TouchableOpacity
             key={t.key}
             style={[s.tabItem, tab === t.key && s.tabItemActive]}
             onPress={() => setTab(t.key)}
             activeOpacity={0.8}
           >
-            <Text style={[s.tabLabel, tab === t.key && s.tabLabelActive]}>
-              {t.label}
-            </Text>
+            <Text style={[s.tabLabel, tab === t.key && s.tabLabelActive]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -159,7 +178,16 @@ const s = StyleSheet.create({
   headerInfo: { flex: 1, paddingRight: 12 },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1E1B4B' },
   headerSubtitle: { marginTop: 4, fontSize: 12, color: '#6B7280', fontWeight: '500' },
-  salir:       { fontSize: 14, color: '#9CA3AF' },
+  settingsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  settingsIcon: { fontSize: 16, color: PURPLE, fontWeight: '700' },
 
   content: { flex: 1 },
 
