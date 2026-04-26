@@ -1,20 +1,3 @@
-/**
- * @file gasto.controller.js
- * @description Controller for the shared expense splitting feature.
- *
- * Splitting logic:
- *   When a new expense is created the total amount is divided equally among
- *   ALL members of the piso (including the payer). For each member who did
- *   NOT pay, a Deuda record is created linking that member (deudor) to the
- *   payer (acreedor) for their share (monto / N members).
- *
- *   A gasto with N members therefore generates N-1 Deuda rows.
- *
- * Balance calculation:
- *   Each unpaid Deuda decrements the deudor's net balance and increments
- *   the acreedor's net balance. A positive neto means the user is owed
- *   money by others; a negative neto means the user owes money to others.
- */
 // ─── Controlador de Gastos Compartidos ───────────────────────────────────────
 const { PrismaClient } = require('@prisma/client');
 

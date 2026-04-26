@@ -207,15 +207,15 @@ export default function CompraScreen() {
   );
 }
 
-const PURPLE = '#6366F1';
-const PURPLE_LIGHT = '#EEF2FF';
+const PURPLE = '#1BBCD4';
+const PURPLE_LIGHT = '#D6F5F5';
 const GREEN = '#10B981';
 const GREEN_LIGHT = '#ECFDF5';
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F7FF', paddingTop: Platform.OS === 'android' ? 8 : 0 },
+  container: { flex: 1, backgroundColor: '#F0FAFA', paddingTop: Platform.OS === 'android' ? 8 : 0 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  loadingTxt: { color: '#6366F1', fontSize: 14 },
+  loadingTxt: { color: '#1BBCD4', fontSize: 14 },
 
   header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
   headerTopRow: {
@@ -224,7 +224,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  headerTitle: { flex: 1, fontSize: 26, fontWeight: '800', color: '#1E1B4B', letterSpacing: -0.5 },
+  headerTitle: { flex: 1, fontSize: 26, fontWeight: '800', color: '#0A7A8A', letterSpacing: -0.5 },
   headerHint: { marginTop: 8, color: '#6B7280', fontSize: 13, lineHeight: 18 },
   badges: { flexDirection: 'row', gap: 8, marginTop: 10 },
   badge: { backgroundColor: PURPLE_LIGHT, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
@@ -240,8 +240,8 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#1E1B4B',
-    shadowColor: '#6366F1',
+    color: '#0A7A8A',
+    shadowColor: '#1BBCD4',
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
@@ -292,7 +292,7 @@ const s = StyleSheet.create({
   checkboxDone: { backgroundColor: GREEN, borderColor: GREEN },
   checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
-  nombre: { flex: 1, fontSize: 16, color: '#1E1B4B', fontWeight: '500' },
+  nombre: { flex: 1, fontSize: 16, color: '#0A7A8A', fontWeight: '500' },
   tachado: { textDecorationLine: 'line-through', color: '#9CA3AF', fontWeight: '400' },
 
   delBtn: {

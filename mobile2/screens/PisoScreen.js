@@ -13,7 +13,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Image,
 } from 'react-native';
 import { api } from './api';
 
@@ -55,7 +55,7 @@ export default function PisoScreen({ onPisoListo }) {
     <KeyboardAvoidingView style={s.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
         <View style={s.header}>
-          <Text style={s.logo}>4all</Text>
+          <Image source={require('../Logo.png')} style={s.logo} resizeMode="contain" />
           <Text style={s.sub}>Configura tu piso</Text>
         </View>
         {/* Selector de acción */}
@@ -93,20 +93,20 @@ export default function PisoScreen({ onPisoListo }) {
 }
 
 const s = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: '#F9FAFB' },
+  container:    { flex: 1, backgroundColor: '#F0FAFA' },
   scroll:       { flexGrow: 1, justifyContent: 'center', padding: 24 },
   header:       { alignItems: 'center', marginBottom: 32 },
-  logo:         { fontSize: 56, fontWeight: '900', color: '#4F46E5', letterSpacing: -2 },
-  sub:          { fontSize: 16, color: '#6B7280', marginTop: 8 },
-  tabs:         { flexDirection: 'row', backgroundColor: '#E5E7EB', borderRadius: 12, padding: 4, marginBottom: 20 },
+  logo:         { width: 140, height: 140 },
+  sub:          { fontSize: 16, color: '#6B7280', marginTop: 12 },
+  tabs:         { flexDirection: 'row', backgroundColor: '#C8F0F0', borderRadius: 12, padding: 4, marginBottom: 20 },
   tab:          { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
   tabActive:    { backgroundColor: '#fff', elevation: 2 },
   tabTxt:       { color: '#6B7280', fontWeight: '600' },
-  tabTxtActive: { color: '#4F46E5' },
+  tabTxtActive: { color: '#1BBCD4', fontWeight: '700' },
   form:         { backgroundColor: '#fff', borderRadius: 16, padding: 24, elevation: 3 },
   label:        { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6 },
-  input:        { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827', backgroundColor: '#F9FAFB' },
-  btn:          { backgroundColor: '#4F46E5', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
+  input:        { borderWidth: 1, borderColor: '#C8F0F0', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827', backgroundColor: '#F9FAFB' },
+  btn:          { backgroundColor: '#1BBCD4', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
   btnOff:       { opacity: 0.6 },
   btnTxt:       { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

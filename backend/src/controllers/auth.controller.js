@@ -5,9 +5,6 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-// bcrypt cost factor: 2^10 = 1024 hashing rounds.
-// Higher values are slower to brute-force but increase CPU cost on login/register.
-// 10 is the industry-standard default that balances security and performance.
 const SALT_ROUNDS = 10;
 
 /**

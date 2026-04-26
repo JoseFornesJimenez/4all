@@ -6,10 +6,10 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { api } from './api';
 
-const PURPLE = '#6366F1';
-const PURPLE_DARK = '#1E1B4B';
-const PURPLE_LIGHT = '#EEF2FF';
-const BG = '#F8F7FF';
+const PURPLE = '#1BBCD4';
+const PURPLE_DARK = '#0A7A8A';
+const PURPLE_LIGHT = '#D6F5F5';
+const BG = '#F0FAFA';
 const CARD = '#FFFFFF';
 const BORDER = '#E5E7EB';
 const MUTED = '#6B7280';

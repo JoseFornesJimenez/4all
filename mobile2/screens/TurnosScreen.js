@@ -5,13 +5,13 @@ import {
 } from 'react-native';
 import { api } from './api';
 
-const BLUE = '#2563EB';
-const BLUE_DARK = '#0F172A';
-const BLUE_LIGHT = '#DBEAFE';
-const BG = '#F5F8FF';
+const BLUE = '#1BBCD4';
+const BLUE_DARK = '#0A7A8A';
+const BLUE_LIGHT = '#D6F5F5';
+const BG = '#F0FAFA';
 const CARD = '#FFFFFF';
-const BORDER = '#DCE5F8';
-const MUTED = '#64748B';
+const BORDER = '#C8F0F0';
+const MUTED = '#6B7280';
 const GREEN = '#16A34A';
 const GREEN_LIGHT = '#DCFCE7';
 const ORANGE = '#EA580C';
@@ -781,15 +781,15 @@ const s = StyleSheet.create({
   headerSubtitle: { marginTop: 8, fontSize: 14, lineHeight: 20, color: MUTED },
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  statsCard: { flex: 1, backgroundColor: CARD, borderRadius: 16, padding: 14 },
+  statsCard: { flex: 1, backgroundColor: CARD, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: BORDER },
   statsLabel: { fontSize: 12, color: MUTED, marginBottom: 6 },
-  statsValue: { color: BLUE_DARK, fontSize: 18, fontWeight: '800' },
+  statsValue: { color: BLUE, fontSize: 22, fontWeight: '800' },
 
-  weekNavCard: { backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 12, marginBottom: 12 },
+  weekNavCard: { backgroundColor: CARD, borderRadius: 18, borderWidth: 1, borderColor: BORDER, padding: 14, marginBottom: 12 },
   weekTopRow: { flexDirection: 'row', gap: 8 },
-  navBtn: { flex: 1, backgroundColor: '#EFF6FF', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  navBtnTxt: { color: '#1D4ED8', fontSize: 12, fontWeight: '700' },
-  weekLabel: { marginTop: 10, color: BLUE_DARK, fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  navBtn: { flex: 1, backgroundColor: BLUE_LIGHT, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  navBtnTxt: { color: '#1BBCD4', fontSize: 12, fontWeight: '700' },
+  weekLabel: { marginTop: 10, color: BLUE_DARK, fontSize: 15, fontWeight: '700', textAlign: 'center' },
   autoBtn: { marginTop: 10, backgroundColor: BLUE, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
   autoBtnTxt: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
 
@@ -797,37 +797,37 @@ const s = StyleSheet.create({
   toggleCreateBtnTxt: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   formCard: { backgroundColor: CARD, borderRadius: 16, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: BORDER },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: BLUE_DARK, marginBottom: 8 },
-  input: { backgroundColor: '#F8FAFC', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: BLUE_DARK, borderWidth: 1, borderColor: BORDER, marginBottom: 12 },
+  input: { backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: BLUE_DARK, borderWidth: 1, borderColor: BORDER, marginBottom: 12 },
   inputArea: { minHeight: 78, textAlignVertical: 'top' },
   selectedDateText: { color: MUTED, fontSize: 13, marginBottom: 8 },
 
   monthPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 8 },
-  monthBtn: { backgroundColor: '#EFF6FF', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
-  monthBtnTxt: { color: '#1D4ED8', fontSize: 12, fontWeight: '700' },
+  monthBtn: { backgroundColor: BLUE_LIGHT, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  monthBtnTxt: { color: '#1BBCD4', fontSize: 12, fontWeight: '700' },
   monthLabel: { flex: 1, textAlign: 'center', color: BLUE_DARK, fontWeight: '700', fontSize: 13 },
 
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
   weekHeaderCell: { width: '14.285%', textAlign: 'center', color: MUTED, fontWeight: '700', marginBottom: 6 },
   dayPickerCellEmpty: { width: '14.285%', height: 34 },
   dayPickerCell: { width: '14.285%', height: 34, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
-  dayPickerCellActive: { backgroundColor: BLUE },
+  dayPickerCellActive: { backgroundColor: BLUE_DARK },
   dayPickerTxt: { color: BLUE_DARK, fontSize: 12, fontWeight: '700' },
   dayPickerTxtActive: { color: '#FFFFFF' },
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  chip: { backgroundColor: BLUE_LIGHT, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
+  chip: { backgroundColor: BLUE_LIGHT, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
   chipActive: { backgroundColor: BLUE_DARK },
-  chipTxt: { color: BLUE, fontSize: 13, fontWeight: '700' },
+  chipTxt: { color: BLUE_DARK, fontSize: 13, fontWeight: '600' },
   chipTxtActive: { color: '#FFFFFF' },
 
   createBtn: { backgroundColor: BLUE, borderRadius: 12, alignItems: 'center', paddingVertical: 12 },
   createBtnTxt: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   btnOff: { opacity: 0.55 },
 
-  requestsCard: { backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 14, marginBottom: 12 },
+  requestsCard: { backgroundColor: CARD, borderRadius: 18, borderWidth: 1, borderColor: BORDER, padding: 14, marginBottom: 12 },
   requestsTitle: { color: BLUE_DARK, fontSize: 15, fontWeight: '800', marginBottom: 8 },
   requestsEmpty: { color: MUTED, fontSize: 13 },
-  requestItem: { backgroundColor: '#F8FAFC', borderRadius: 12, padding: 10, marginTop: 8 },
+  requestItem: { backgroundColor: BG, borderRadius: 12, padding: 10, marginTop: 8, borderWidth: 1, borderColor: BORDER },
   requestTopLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   requestText: { color: BLUE_DARK, fontSize: 13, fontWeight: '700', flex: 1 },
   requestMeta: { color: MUTED, fontSize: 12, marginTop: 4 },
@@ -841,25 +841,25 @@ const s = StyleSheet.create({
   requestStateBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
   requestStateTxt: { fontSize: 11, fontWeight: '700' },
 
-  calendarCard: { backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 14, marginBottom: 12 },
+  calendarCard: { backgroundColor: CARD, borderRadius: 18, borderWidth: 1, borderColor: BORDER, padding: 14, marginBottom: 12 },
   calendarTitle: { fontSize: 15, fontWeight: '700', color: BLUE_DARK, marginBottom: 10 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  dayCell: { flex: 1, backgroundColor: '#EFF6FF', borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
-  dayCellActive: { backgroundColor: BLUE },
-  dayLabel: { color: '#1D4ED8', fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  dayLabelActive: { color: '#DBEAFE' },
+  dayCell: { flex: 1, backgroundColor: BLUE_LIGHT, borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
+  dayCellActive: { backgroundColor: BLUE_DARK },
+  dayLabel: { color: BLUE, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  dayLabelActive: { color: '#B2F0F0' },
   dayNumber: { marginTop: 2, color: BLUE_DARK, fontSize: 15, fontWeight: '800' },
   dayNumberActive: { color: '#FFFFFF' },
-  countDot: { marginTop: 5, minWidth: 22, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: '#BFDBFE', alignItems: 'center' },
-  countDotActive: { backgroundColor: '#93C5FD' },
-  countDotTxt: { color: '#1E3A8A', fontSize: 11, fontWeight: '700' },
-  countDotTxtActive: { color: BLUE_DARK },
+  countDot: { marginTop: 5, minWidth: 22, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999, backgroundColor: '#A7EEF5', alignItems: 'center' },
+  countDotActive: { backgroundColor: '#5DD8E8' },
+  countDotTxt: { color: BLUE_DARK, fontSize: 11, fontWeight: '700' },
+  countDotTxtActive: { color: '#FFFFFF' },
 
   dayHeader: { marginBottom: 10 },
   dayHeaderTitle: { fontSize: 18, fontWeight: '800', color: BLUE_DARK },
   dayHeaderSubtitle: { marginTop: 4, fontSize: 13, color: MUTED },
 
-  card: { backgroundColor: CARD, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: BORDER },
+  card: { backgroundColor: CARD, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: BORDER, shadowColor: '#000', shadowOpacity: 0.05, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, elevation: 1 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   cardTitle: { color: BLUE_DARK, fontSize: 16, fontWeight: '800' },
   cardMeta: { marginTop: 4, color: MUTED, fontSize: 13 },
@@ -883,12 +883,12 @@ const s = StyleSheet.create({
   actionDeleteTxt: { color: '#B91C1C', fontWeight: '700', fontSize: 12 },
 
   swapWrap: { marginTop: 10 },
-  swapToggle: { backgroundColor: '#EEF2FF', borderRadius: 10, alignItems: 'center', paddingVertical: 10 },
-  swapToggleTxt: { color: '#1D4ED8', fontWeight: '700', fontSize: 13 },
-  swapPanel: { marginTop: 10, backgroundColor: '#F8FAFC', borderRadius: 12, borderWidth: 1, borderColor: BORDER, padding: 10 },
+  swapToggle: { backgroundColor: '#D6F5F5', borderRadius: 10, alignItems: 'center', paddingVertical: 10 },
+  swapToggleTxt: { color: '#1BBCD4', fontWeight: '700', fontSize: 13 },
+  swapPanel: { marginTop: 10, backgroundColor: BG, borderRadius: 12, borderWidth: 1, borderColor: BORDER, padding: 10 },
   swapTitle: { color: BLUE_DARK, fontWeight: '700', fontSize: 13, marginBottom: 8 },
 
-  emptyWrap: { backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, padding: 24, alignItems: 'center' },
+  emptyWrap: { backgroundColor: CARD, borderRadius: 18, borderWidth: 1, borderColor: BORDER, padding: 24, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700', color: BLUE_DARK, marginBottom: 6, textAlign: 'center' },
   emptySubtitle: { fontSize: 14, lineHeight: 20, color: MUTED, textAlign: 'center' },
 });

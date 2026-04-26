@@ -7,7 +7,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert, Modal, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import LoginScreen from './screens/LoginScreen';
@@ -31,6 +31,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [piso, setPiso] = useState(null);
   const [tab, setTab] = useState('compra');
+  const [menuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => {
     if (screen !== 'Main' || !user?.pisoId || piso) return;
@@ -78,17 +79,7 @@ export default function App() {
     }
   };
 
-  const handleMenu = () => {
-    Alert.alert(
-      'Tu cuenta',
-      'Puedes cerrar sesion o salir del piso actual. Ahora mismo la app solo soporta un piso por usuario.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Cerrar sesion', onPress: handleSalir },
-        { text: 'Salir del piso', style: 'destructive', onPress: handleSalirDePiso },
-      ]
-    );
-  };
+  const handleMenu = () => setMenuVisible(true);
 
   if (screen === 'Login') {
     return (
@@ -155,14 +146,36 @@ export default function App() {
           </TouchableOpacity>
         ))}
       </View>
+
+      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
+        <Pressable style={s.modalOverlay} onPress={() => setMenuVisible(false)}>
+          <Pressable style={s.menuCard} onPress={() => {}}>
+            <View style={s.menuHandle} />
+            <Text style={s.menuTitle}>Tu cuenta</Text>
+            {!!piso?.nombre && <Text style={s.menuPiso}>{piso.nombre}</Text>}
+
+            <TouchableOpacity style={s.menuBtn} onPress={() => { setMenuVisible(false); handleSalir(); }}>
+              <Text style={s.menuBtnTxt}>Cerrar sesión</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[s.menuBtn, s.menuBtnDanger]} onPress={() => { setMenuVisible(false); handleSalirDePiso(); }}>
+              <Text style={[s.menuBtnTxt, s.menuBtnDangerTxt]}>Salir del piso</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.menuCancel} onPress={() => setMenuVisible(false)}>
+              <Text style={s.menuCancelTxt}>Cancelar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
-const PURPLE = '#6366F1';
+const TEAL = '#1BBCD4';
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F7FF' },
+  container: { flex: 1, backgroundColor: '#F0FAFA' },
 
   header: {
     backgroundColor: '#fff',
@@ -173,21 +186,21 @@ const s = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#C8F0F0',
   },
   headerInfo: { flex: 1, paddingRight: 12 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1E1B4B' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#0A7A8A' },
   headerSubtitle: { marginTop: 4, fontSize: 12, color: '#6B7280', fontWeight: '500' },
   settingsBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#D6F5F5',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
   },
-  settingsIcon: { fontSize: 16, color: PURPLE, fontWeight: '700' },
+  settingsIcon: { fontSize: 16, color: TEAL, fontWeight: '700' },
 
   content: { flex: 1 },
 
@@ -195,9 +208,9 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#EBEBEB',
-    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-    paddingTop: 8,
+    borderTopColor: '#C8F0F0',
+    paddingBottom: Platform.OS === 'ios' ? 24 : 20,
+    paddingTop: 10,
     paddingHorizontal: 12,
     gap: 8,
   },
@@ -209,7 +222,7 @@ const s = StyleSheet.create({
     borderRadius: 14,
   },
   tabItemActive: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#D6F5F5',
   },
   tabLabel: {
     fontSize: 13,
@@ -218,7 +231,71 @@ const s = StyleSheet.create({
     marginTop: 2,
   },
   tabLabelActive: {
-    color: PURPLE,
+    color: TEAL,
     fontWeight: '700',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'flex-end',
+  },
+  menuCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  menuHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0A7A8A',
+    marginBottom: 4,
+  },
+  menuPiso: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 20,
+  },
+  menuBtn: {
+    backgroundColor: '#F0FAFA',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#C8F0F0',
+  },
+  menuBtnTxt: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0A7A8A',
+  },
+  menuBtnDanger: {
+    backgroundColor: '#FFF5F5',
+    borderColor: '#FECACA',
+  },
+  menuBtnDangerTxt: {
+    color: '#DC2626',
+  },
+  menuCancel: {
+    marginTop: 4,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  menuCancelTxt: {
+    fontSize: 15,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
 });

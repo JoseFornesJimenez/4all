@@ -1,12 +1,4 @@
-/**
- * @file compra.controller.js
- * @description Controller for the shared shopping list feature.
- *
- * Each item belongs to a piso and tracks who created it, its name/quantity,
- * and whether it has been picked up (completado). All operations are scoped
- * to the authenticated user's pisoId so members of one flat can never
- * read or mutate items belonging to another flat.
- */
+
 // ─── Controlador de Lista de la Compra ───────────────────────────────────────
 const { PrismaClient } = require('@prisma/client');
 

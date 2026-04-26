@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Image,
 } from 'react-native';
 import { api, setToken } from './api';
 
@@ -49,10 +49,14 @@ export default function RegisterScreen({ onLogin, onGoLogin }) {
   };
 
   return (
-    <KeyboardAvoidingView style={s.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={s.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
         <View style={s.header}>
-          <Text style={s.logo}>4all</Text>
+          <Image source={require('../Logo.png')} style={s.logo} resizeMode="contain" />
           <Text style={s.sub}>Crea tu cuenta</Text>
         </View>
         <View style={s.form}>
@@ -81,18 +85,18 @@ export default function RegisterScreen({ onLogin, onGoLogin }) {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F0FAFA' },
   scroll:    { flexGrow: 1, justifyContent: 'center', padding: 24 },
   header:    { alignItems: 'center', marginBottom: 40 },
-  logo:      { fontSize: 56, fontWeight: '900', color: '#4F46E5', letterSpacing: -2 },
-  sub:       { fontSize: 16, color: '#6B7280', marginTop: 8 },
+  logo:      { width: 140, height: 140 },
+  sub:       { fontSize: 16, color: '#6B7280', marginTop: 12 },
   form:      { backgroundColor: '#fff', borderRadius: 16, padding: 24, elevation: 3 },
   label:     { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 12 },
-  input:     { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827', backgroundColor: '#F9FAFB' },
-  btn:       { backgroundColor: '#4F46E5', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  input:     { borderWidth: 1, borderColor: '#C8F0F0', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827', backgroundColor: '#F9FAFB' },
+  btn:       { backgroundColor: '#1BBCD4', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
   btnOff:    { opacity: 0.6 },
   btnTxt:    { color: '#fff', fontSize: 16, fontWeight: '700' },
   footer:    { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
   footerTxt: { color: '#6B7280', fontSize: 14 },
-  link:      { color: '#4F46E5', fontSize: 14, fontWeight: '600' },
+  link:      { color: '#1BBCD4', fontSize: 14, fontWeight: '600' },
 });
